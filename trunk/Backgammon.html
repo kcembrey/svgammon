@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <svg width="600" height="590">
+		<polygon id="t1" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t2" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t3" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t4" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t5" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t6" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t7" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t8" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t9" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t10" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t11" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t12" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t13" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t14" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t15" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t16" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t17" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t18" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t19" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t20" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t21" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t22" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="t23" stroke="red" fill="black" stroke-width="1" />
+		<polygon id="t24" stroke="black" fill="red" stroke-width="1" />
+		<polygon id="bar" points="280 0, 320 0, 320 590, 280 590" stroke="black" fill="green" stroke-width="1" />
+		<polygon id="ledge" points="0 0, 40 0, 40 590, 0 590" stroke="black" fill="blue" stroke-width="1" />
+		<polygon id="redge" points="560 0, 600 0, 600 590, 560 590" stroke="black" fill="blue" stroke-width="1" />
+		<circle id=p1c1 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c2 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c3 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c4 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c5 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c6 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c7 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c8 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c9 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c10 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c11 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c12 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c13 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c14 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p1c15 r="20" stroke="black" stroke-width="1" fill="yellow" />
+		<circle id=p2c1 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c2 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c3 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c4 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c5 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c6 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c7 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c8 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c9 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c10 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c11 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c12 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c13 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c14 r="20" stroke="black" stroke-width="1" fill="brown" />
+		<circle id=p2c15 r="20" stroke="black" stroke-width="1" fill="brown" />
+</svg>
+<div id="svgContainer" onload="populateBoard()"> </div>
+<input id="button1" type="button" value="Populate Board"
+            onclick="populateBoard()"/>
+
+<script>
+	var points = [];
+    function populateBoard() {  
+		for (i = 1; i <= 12; i ++){
+			points[i] = { id: i, count: 0, player: 0 };
+		}
+		for (i = 1; i <= 6; i++) {
+			var element = "t" + i;
+			document.getElementById(element).setAttribute("points", i * 40 + " 0, " + (i * 40 + 20) + " 230, " + (i * 40 + 40) + " 0");
+		}
+		for (i = 7; i <= 12; i++) {
+			var element = "t" + i;
+			document.getElementById(element).setAttribute("points", (i * 40 + 40) + " 0, " + (i * 40 + 60) + " 230, " + (i * 40 + 80) + " 0");
+		}
+		for (i = 1; i <= 6; i++) {
+			var element = "t" + (i + 12);
+			document.getElementById(element).setAttribute("points", i * 40 + " 590, " + (i * 40 + 20) + " 360, " + (i * 40 + 40) + " 590");
+		}
+		for (i = 7; i <= 12; i++) {
+			var element = "t" + (i + 12);
+			document.getElementById(element).setAttribute("points", (i * 40 + 40) + " 590, " + (i * 40 + 60) + " 360, " + (i * 40 + 80) + " 590");
+		}
+		var base = 0;
+		for (i = 1; i <= 2; i++) {
+			moveChecker("p1c" + i, 540, (base * 42) + 21);
+			base++;
+		}
+		base = 0;
+		for (i = 3; i <= 7; i++) {
+			moveChecker("p1c" + i, 60, (base * 42) + 21);
+			base++;
+		}
+		base = 0;
+		for (i = 8; i <= 10; i++) {
+			moveChecker("p1c" + i, 220, 590 - ((base * 42) + 21));
+			base++;
+		}
+		base = 0;
+		for (i = 11; i <= 15; i++) {
+			moveChecker("p1c" + i, 340, 590 - ((base * 42) + 21));
+			base++;
+		}
+		
+		
+		var base = 0;
+		for (i = 1; i <= 2; i++) {
+			moveChecker("p2c" + i, 540, 590 - ((base * 42) + 21));
+			base++;
+		}
+		base = 0;
+		for (i = 3; i <= 7; i++) {
+			moveChecker("p2c" + i, 60, 590 - ((base * 42) + 21));
+			base++;
+		}
+		base = 0;
+		for (i = 8; i <= 10; i++) {
+			moveChecker("p2c" + i, 220, (base * 42) + 21);
+			base++;
+		}
+		base = 0;
+		for (i = 11; i <= 15; i++) {
+			moveChecker("p2c" + i, 340, (base * 42) + 21);
+			base++;
+		}
+	function moveChecker(checkerID, x, y){
+		document.getElementById(checkerID).setAttribute("cx", x);
+		document.getElementById(checkerID).setAttribute("cy", y);
+	}
+	function calcCheckerX( point, player ){
+		if (points[point](count) <= 1)
+		{
+			return (points[point](count) * 42) + 21;
+		}
+		else return false;
+	}
+}
+</script>
+</body>
+</html>
