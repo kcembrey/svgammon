@@ -94,7 +94,7 @@
 			document.getElementById(element).setAttribute("points", (i * 40 + 40) + " 590, " + (i * 40 + 60) + " 360, " + (i * 40 + 80) + " 590");
 		}
 		
-		for (i = 1; i <= 2; i++) {
+		for (i = 1; i <= 5; i++) {
 			var res = calcCheckerXY( 1, 1);
 			moveChecker("p1c" + i, res[0], res[1]);
 			$("#p1c" + i).click(function() {
@@ -104,11 +104,11 @@
 				$("#t3").click(function(){
 					var res = calcCheckerXY( 3, 1);
 					moveChecker(checkerID, res[0], res[1]);
-					$("#t3").attr("fill", "red");
+					resetPoint(this);
 				});
 			});
 		}
-		for (i = 3; i <= 7; i++) {
+		for (i = 6; i <= 7; i++) {
 			var res = calcCheckerXY( 12, 1);
 			moveChecker("p1c" + i, res[0], res[1]);
 		}
@@ -122,25 +122,25 @@
 		}
 		
 		
-		for (i = 1; i <= 2; i++) {
-			var res = calcCheckerXY( 6, 2);
+		for (i = 1; i <= 3; i++) {
+			var res = calcCheckerXY( 5, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
 		}
-		for (i = 3; i <= 7; i++) {
-			var res = calcCheckerXY( 8, 2);
+		for (i = 4; i <= 8; i++) {
+			var res = calcCheckerXY( 7, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
 		}
-		for (i = 8; i <= 10; i++) {
+		for (i = 9; i <= 13; i++) {
 			var res = calcCheckerXY( 13, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
 		}
-		for (i = 11; i <= 15; i++) {
+		for (i = 14; i <= 15; i++) {
 			var res = calcCheckerXY( 24, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
 		}
 	}
 	function resetPoint(point){
-		if (isEven(point.split("t")[1]))
+		if (isEven(point.id.split("t")[1]))
 		{
 			$(point).attr("fill", "black");
 		}
@@ -151,6 +151,10 @@
 	}
 	function isEven(n) {
 		return isNumber(n) && (n % 2 == 0);
+	}
+	function isNumber(n)
+	{
+	   return n == parseFloat(n);
 	}
 	function moveChecker(checkerID, x, y){
 		document.getElementById(checkerID).setAttribute("cx", x);
@@ -165,20 +169,20 @@
 		if (points[point].count <= 1 || points[point].player == player)
 		{
 			if (point <= 6){
-				result[0] = 600 - 20 - (point * 40);	
+				result[0] = 20 + (point * 40);	
 				result[1] = (points[point].count * 42) + 21;		
 			}
 			else if (point <= 12){
-				result[0] = 600 - 60 - (point * 40);
+				result[0] = 60 + (point * 40);
 				result[1] = (points[point].count * 42) + 21;
 			}
 			else if (point <= 18){
-				result[0] = ((point - 12) * 40) + 21;
-				result[1] = 590 - (points[point].count * 42) + 21;
+				result[0] = 20 + ((point - 12) * 40);
+				result[1] = 550 - (points[point].count * 42) + 21;
 			}
 			else if (point <= 24){
-				result[0] = ((point - 12) * 40) + 61;	
-				result[1] = 590 - (points[point].count * 42) + 21;	
+				result[0] = 60 + ((point - 12) * 40);	
+				result[1] = 550 - (points[point].count * 42) + 21;	
 			}
 			points[point].count++;
 		}
