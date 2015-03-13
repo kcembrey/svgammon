@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html margin="0" height="100%" width="100%">
+<head>
+<script src="jquery-1.11.2.js"></script>
+</head>
+<body margin="0" height="100%" width="100%">
     <svg width="600" height="590">
 		<polygon id="t1" stroke="black" fill="red" stroke-width="1" />
 		<polygon id="t2" stroke="red" fill="black" stroke-width="1" />
@@ -64,8 +67,12 @@
 <input id="button1" type="button" value="Populate Board"
             onclick="populateBoard()"/>
 
-<script>
+<script type="text/javascript">
 	var points = [];
+	function onLoad(populateBoard) {
+        //svg.text(10, 20, error || 'Loaded into ' + this.id);
+        //resetSize(svg, null, null); //'100%', '100%');
+    }
     function populateBoard() {  
 		for (i = 1; i <= 24; i ++){
 			points[i] = { id: i, count: 0, player: 0 };
@@ -90,6 +97,16 @@
 		for (i = 1; i <= 2; i++) {
 			var res = calcCheckerXY( 1, 1);
 			moveChecker("p1c" + i, res[0], res[1]);
+			$("#p1c" + i).click(function() {
+				var checkerID = this.id;
+				$(this).attr("fill", "purple");
+				$("#t3").attr("fill", "green");
+				$("#t3").click(function(){
+					var res = calcCheckerXY( 3, 1);
+					moveChecker(checkerID, res[0], res[1]);
+					$("#t3").attr("fill", "red");
+				});
+			});
 		}
 		for (i = 3; i <= 7; i++) {
 			var res = calcCheckerXY( 12, 1);
@@ -121,6 +138,19 @@
 			var res = calcCheckerXY( 24, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
 		}
+	}
+	function resetPoint(point){
+		if (isEven(point.split("t")[1]))
+		{
+			$(point).attr("fill", "black");
+		}
+		else
+		{
+			$(point).attr("fill", "red");
+		}
+	}
+	function isEven(n) {
+		return isNumber(n) && (n % 2 == 0);
 	}
 	function moveChecker(checkerID, x, y){
 		document.getElementById(checkerID).setAttribute("cx", x);
