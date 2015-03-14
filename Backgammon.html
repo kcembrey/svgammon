@@ -102,7 +102,7 @@
 				var checkerID = this.id;
 				$(this).attr("fill", "purple");
 				$("#t3").attr("fill", "green");
-				$("#t3").click(pointClick(checkerID, document.getElementById("t3"), "1"));
+				$("#t3").click(function() {pointClick(checkerID, document.getElementById("t3"), "1")});
 			});
 		}
 		for (i = 6; i <= 7; i++) {
