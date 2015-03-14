@@ -223,11 +223,11 @@
 		return result;
 	}
 	
-	function rollDice(number1, number2){		
+	function rollDice(){		
 		showDice();
 		clearDice();
-		populateDi(1, number1);
-		populateDi(2, number2);
+		populateDi(1, Math.floor((Math.random() * 6) + 1));
+		populateDi(2, Math.floor((Math.random() * 6) + 1));
 	}
 	
 	function populateDi(di, number)
