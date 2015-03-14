@@ -82,6 +82,8 @@
 <div id="svgContainer" onload="populateBoard()"> </div>
 <input id="button1" type="button" value="Populate Board"
             onclick="populateBoard()"/>
+<input id="button2" type="button" value="Roll Dice"
+            onclick="rollDice(1,6)"/>
 
 <script type="text/javascript">
 	var points = [];
@@ -221,14 +223,43 @@
 		return result;
 	}
 	
-	function createDi(number1, number2){		
+	function rollDice(number1, number2){		
 		showDice();
-		
+		clearDice();
+		populateDi(1, number1);
+		populateDi(2, number2);
+	}
+	
+	function populateDi(di, number)
+	{
+		if (number == 1 || number == 3 || number == 5){
+			$("#d" + di + "d7").css("visibility", "visible");
+		}
+		if (number >= 2){
+			$("#d" + di + "d1").css("visibility", "visible");
+			$("#d" + di + "d6").css("visibility", "visible");
+		}
+		if (number >= 4){
+			$("#d" + di + "d2").css("visibility", "visible");
+			$("#d" + di + "d5").css("visibility", "visible");
+		}
+		if (number == 6){
+			$("#d" + di + "d3").css("visibility", "visible");
+			$("#d" + di + "d4").css("visibility", "visible");
+		}
 	}
 	
 	function hideDice(){		
 		$("#d1").css("visibility", "hidden");
 		$("#d2").css("visibility", "hidden");
+		clearDice();
+	}
+	
+	function clearDice(){	
+		for (i = 1; i <=7; i++){
+			$("#d1d" + i).css("visibility", "hidden");
+			$("#d2d" + i).css("visibility", "hidden");
+		}	
 	}
 	
 	function showDice(){		
