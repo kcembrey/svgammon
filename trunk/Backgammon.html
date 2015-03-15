@@ -89,6 +89,10 @@
 
 <script type="text/javascript">
 	var points = [];
+	var d1Active = false;
+	var d2Active = false;
+	var hotpoint1 = 0;
+	var hotpoint2 = 0;
 	function onLoad(populateBoard) {
         //svg.text(10, 20, error || 'Loaded into ' + this.id);
         //resetSize(svg, null, null); //'100%', '100%');
@@ -217,10 +221,18 @@
 			point1 = "t" + (numOnPoint - numD1);
 			point2 = "t" + (numOnPoint - numD2);
 		}
-		$("#" + point1).attr("fill", "green");
-		$("#" + point1).click(function() {pointClick(checkerID, document.getElementById(point1), "1")});
-		$("#" + point2).attr("fill", "green");
-		$("#" + point2).click(function() {pointClick(checkerID, document.getElementById(point2), "1")});
+		if (d1Active)
+		{
+			$("#" + point1).attr("fill", "green");
+			$("#" + point1).click(function() {pointClick(checkerID, document.getElementById(point1), "1")});
+		}
+		if (d2Active)
+		{
+			$("#" + point2).attr("fill", "green");
+			$("#" + point2).click(function() {pointClick(checkerID, document.getElementById(point2), "1")});
+		}
+		hotpoint1 = point1;
+		hotpoint2 = point2;
 	}
 	function resetPoint(point){	
 		$(point).unbind("click");
@@ -232,6 +244,10 @@
 		{
 			$(point).attr("fill", "red");
 		}
+	}
+	function resetPoints(){
+		resetPoint(document.getElementById(hotpoint1));
+		resetPoint(document.getElementById(hotpoint2));
 	}
 	function pointNumber(point){
 		return point.id.split("t")[1];
@@ -246,13 +262,24 @@
 	function pointClick(checkerID, point, player){
 		var res = calcCheckerXY( pointNumber(point), player);
 		moveChecker(checkerID, res[0], res[1]);
-		resetPoint(point);
+		resetPoints();
 		if (player == "1"){
 			$("#" + checkerID).attr("fill", "yellow");	
 		}
 		else{
 			$("#" + checkerID).attr("fill", "red");	
 		}
+		if (pointNumber(point) == document.getElementById("d1value").value)
+		{
+			d1Active = false;
+			$("#d1").css("visibility", "hidden");
+		}
+		else
+		{
+			d2Active = false;
+			$("#d2").css("visibility", "hidden");
+		}
+		return true;
 	}
 	function moveChecker(checkerID, x, y){
 		document.getElementById(checkerID).setAttribute("cx", x);
@@ -298,6 +325,8 @@
 		document.getElementById("d2value").value = value2;
 		populateDi(1, value1);
 		populateDi(2, value2);
+		d1Active = true;
+		d2Active = true;
 	}
 	
 	function populateDi(di, number)
