@@ -114,7 +114,7 @@
 			document.getElementById(element).setAttribute("points", (i * 40 + 40) + " 590, " + (i * 40 + 60) + " 360, " + (i * 40 + 80) + " 590");
 		}
 		
-		for (i = 1; i <= 5; i++) {
+		for (i = 1; i <= 2; i++) {
 			var checker = "p1c" + i;
 			var res = calcCheckerXY( 1, 1);
 			moveChecker(checker, res[0], res[1]);
@@ -124,11 +124,11 @@
 				highlightPoints(this);
 			});
 		}
-		for (i = 6; i <= 7; i++) {
+		for (i = 3; i <= 7; i++) {
 			var checker = "p1c" + i;
 			var res = calcCheckerXY( 12, 1);
 			moveChecker("p1c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 1);
+			document.getElementById(checker).setAttribute("onPoint", 12);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
@@ -138,7 +138,7 @@
 			var checker = "p1c" + i;
 			var res = calcCheckerXY( 17, 1);
 			moveChecker("p1c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 1);
+			document.getElementById(checker).setAttribute("onPoint", 17);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
@@ -148,7 +148,7 @@
 			var checker = "p1c" + i;
 			var res = calcCheckerXY( 19, 1);
 			moveChecker("p1c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 1);
+			document.getElementById(checker).setAttribute("onPoint", 19);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
@@ -156,21 +156,21 @@
 		}
 		
 		
-		for (i = 1; i <= 3; i++) {
+		for (i = 1; i <= 5; i++) {
 			var checker = "p2c" + i;
 			var res = calcCheckerXY( 5, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 2);
+			document.getElementById(checker).setAttribute("onPoint", 6);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
 			});
 		}
-		for (i = 4; i <= 8; i++) {
+		for (i = 6; i <= 8; i++) {
 			var checker = "p2c" + i;
 			var res = calcCheckerXY( 7, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 2);
+			document.getElementById(checker).setAttribute("onPoint", 8);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
@@ -180,7 +180,7 @@
 			var checker = "p2c" + i;
 			var res = calcCheckerXY( 13, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 2);
+			document.getElementById(checker).setAttribute("onPoint", 13);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
@@ -190,7 +190,7 @@
 			var checker = "p2c" + i;
 			var res = calcCheckerXY( 24, 2);
 			moveChecker("p2c" + i, res[0], res[1]);
-			document.getElementById(checker).setAttribute("onPoint", 2);
+			document.getElementById(checker).setAttribute("onPoint", 24);
 			$("#" +checker).click(function() {
 				$(this).attr("fill", "purple");
 				highlightPoints(this);
@@ -204,11 +204,26 @@
 		var d1val = document.getElementById("d1value").value;
 		var d2val = document.getElementById("d2value").value;		
 		var checkerID = checker.id;
-		var curPoint = "t" + (onPoint + d2val);
-		$("#" + curPoint).attr("fill", "green");
-		$("#" + curPoint).click(function() {pointClick(checkerID, document.getElementById(curPoint), "1")});
+		var player = checker.id.split("p")[1].split("c")[0];
+		var point1; var point2;
+		var numOnPoint = parseFloat(onPoint);
+		var numD1 = parseFloat(d1val);
+		var numD2 = parseFloat(d2val);
+		if (player == 1) {
+			point1 = "t" + (numOnPoint + numD1);
+			point2 = "t" + (numOnPoint + numD2);
+		}
+		else{
+			point1 = "t" + (numOnPoint - numD1);
+			point2 = "t" + (numOnPoint - numD2);
+		}
+		$("#" + point1).attr("fill", "green");
+		$("#" + point1).click(function() {pointClick(checkerID, document.getElementById(point1), "1")});
+		$("#" + point2).attr("fill", "green");
+		$("#" + point2).click(function() {pointClick(checkerID, document.getElementById(point2), "1")});
 	}
-	function resetPoint(point){
+	function resetPoint(point){	
+		$(point).unbind("click");
 		if (isEven(pointNumber(point)))
 		{
 			$(point).attr("fill", "black");
@@ -232,7 +247,6 @@
 		var res = calcCheckerXY( pointNumber(point), player);
 		moveChecker(checkerID, res[0], res[1]);
 		resetPoint(point);
-		$(point).unbind("click");
 		if (player == "1"){
 			$("#" + checkerID).attr("fill", "yellow");	
 		}
@@ -245,8 +259,8 @@
 		document.getElementById(checkerID).setAttribute("cy", y);
 	}
 	function calcCheckerXY( point, player ){
-		result = [];
-		count = points[point].count;
+		var result = [];
+		var count = points[point].count;
 		if (points[point].player == 0)
 		{
 			points[point].player = player;
@@ -254,11 +268,11 @@
 		if (count <= 1 || points[point].player == player)
 		{
 			if (point <= 6){
-				result[0] = 20 + (point * 40);	
+				result[0] = 580 - (point * 40);	
 				result[1] = (count * 42) + 21;		
 			}
 			else if (point <= 12){
-				result[0] = 60 + (point * 40);
+				result[0] = 540 - (point * 40);
 				result[1] = (count * 42) + 21;
 			}
 			else if (point <= 18){
