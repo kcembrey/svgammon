@@ -4,7 +4,8 @@
 <script src="jquery-1.11.2.js"></script>
 </head>
 <body margin="0" height="100%" width="100%">
-    <svg width="600" height="590">
+<div id="svgContainer" onload="populateBoard()" height="100%" width="100%">
+    <svg id="svgObj" width="600" height="590">
 		<polygon id="t1" stroke="black" fill="red" stroke-width="1" />
 		<polygon id="t2" stroke="red" fill="black" stroke-width="1" />
 		<polygon id="t3" stroke="black" fill="red" stroke-width="1" />
@@ -63,7 +64,7 @@
 		<circle id="p2c14" r="20" stroke="black" stroke-width="1" fill="brown" />
 		<circle id="p2c15" r="20" stroke="black" stroke-width="1" fill="brown" />
 		<rect id="d1" x="110" y="285"  width="40" height="40" stroke="black" stroke-width="1" fill="orange" />
-		<rect id="d2" x="170" y="285" width="40" height="40" stroke="black" stroke-width="1"" fill="orange" />
+		<rect id="d2" x="170" y="285" width="40" height="40" stroke="black" stroke-width="1" fill="orange" />
 		<circle id="d1d1" cx="119" cy="294" r="4" stroke="black" stroke-width="1" fill="black" />
 		<circle id="d1d2" cx="141" cy="294" r="4" stroke="black" stroke-width="1" fill="black" />
 		<circle id="d1d3" cx="119" cy="305" r="4" stroke="black" stroke-width="1" fill="black" />
@@ -79,7 +80,7 @@
 		<circle id="d2d6" cx="201" cy="316" r="4" stroke="black" stroke-width="1" fill="black" />
 		<circle id="d2d7" cx="190" cy="305" r="4" stroke="black" stroke-width="1" fill="black" />
 </svg>
-<div id="svgContainer" onload="populateBoard()"> </div>
+ </div>
 <input id="d1value" type="hidden" value="0"/>
 <input id="d2value" type="hidden" value="0"/>
 <input id="button1" type="button" value="Populate Board"
