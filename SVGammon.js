@@ -122,8 +122,6 @@ function populateBoard() {
 		moveChecker(checker, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 1);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -133,8 +131,6 @@ function populateBoard() {
 		moveChecker("p1c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 12);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -144,8 +140,6 @@ function populateBoard() {
 		moveChecker("p1c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 17);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -155,8 +149,6 @@ function populateBoard() {
 		moveChecker("p1c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 19);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -168,8 +160,6 @@ function populateBoard() {
 		moveChecker("p2c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 5);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -179,8 +169,6 @@ function populateBoard() {
 		moveChecker("p2c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 7);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -190,8 +178,6 @@ function populateBoard() {
 		moveChecker("p2c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 13);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -201,8 +187,6 @@ function populateBoard() {
 		moveChecker("p2c" + i, res[0], res[1]);
 		document.getElementById(checker).setAttribute("onPoint", 24);
 		$("#" + checker).click(function () {
-				$(this)
-					.attr("fill", "purple");
 				highlightPoints(this);
 			});
 	}
@@ -211,6 +195,7 @@ function populateBoard() {
 }
 
 function highlightPoints(checker) {
+  $(checker).attr("fill", "purple");
 	var onPoint = checker.getAttribute("onPoint");
 	var d1Val = document.getElementById("d1value")
 		.value;
