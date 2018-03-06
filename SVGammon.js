@@ -8,6 +8,7 @@ var initiated = false;
 var p1CheckerFill = 'yellow';
 var p2CheckerFill = 'brown';
 var pointActiveFill = 'green';
+var activeChecker;
 
 function onLoad(populateBoard) {
 	//svg.text(10, 20, error || 'Loaded into ' + this.id);
@@ -156,7 +157,6 @@ function initiateChecker(player, checkerIndex, checkerX, checkerY){
 
 
 function highlightPoints(checker) {
-  $(checker).attr("fill", "purple");
 	var onPoint = checker.getAttribute("onPoint");
 	var d1Val = document.getElementById("d1value")
 		.value;
@@ -169,6 +169,7 @@ function highlightPoints(checker) {
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
+
 	if (player == 1) {
 		point1 = (numOnPoint + numD1);
 		point2 = (numOnPoint + numD2);
@@ -176,6 +177,14 @@ function highlightPoints(checker) {
 		point1 = (numOnPoint - numD1);
 		point2 = (numOnPoint - numD2);
 	}
+
+  resetActive();
+
+  activeChecker = checker;
+  $(checker).attr('fill', 'purple');
+
+console.log(point1);
+console.log(point2);
 	if (d1Active && (points[point1].player === 0 || points[point1].player === player)) {
 		$('#t' + point1)
 			.attr("fill", pointActiveFill);
@@ -195,6 +204,14 @@ function highlightPoints(checker) {
 	}
 	hotpoint1 = 't' + point1;
 	hotpoint2 = 't' + point2;
+}
+
+function resetActive() {
+  if (activeChecker) {
+    var activeCheckerPlayer = activeChecker.id.split("p")[1].split("c")[0];
+    $(activeChecker).attr('fill', activeCheckerPlayer == 1 ? p1CheckerFill : p2CheckerFill);
+    resetPoints();
+  }
 }
 
 function resetPoint(point) {
@@ -291,6 +308,7 @@ function calcCheckerXY(pointNumber, player) {
 }
 
 function rollDice() {
+  resetActive();
 	showDice();
 	clearDice();
 	var value1 = Math.floor((Math.random() * 6) + 1);
