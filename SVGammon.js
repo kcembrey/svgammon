@@ -4,14 +4,78 @@ var d2Active = false;
 var hotpoint1 = 0;
 var hotpoint2 = 0;
 var element;
+var initiated = false;
+var p1CheckerFill = 'yellow';
+var p2CheckerFill = 'brown';
 
 function onLoad(populateBoard) {
 	//svg.text(10, 20, error || 'Loaded into ' + this.id);
 	//resetSize(svg, null, null); //'100%', '100%');
 }
 
-function populateBoard() {
+function initiate(){
+  var checker;
+  var di = 1;
+  var dot;
   var player = 1;
+  var cx;
+  var cy;
+  var rx;
+  var svgns = 'http://www.w3.org/2000/svg';
+
+  for (i = 1; i <= 15; i++) {
+    fill = player === 1 ? p1CheckerFill : p2CheckerFill;
+    checker = document.createElementNS(svgns, 'circle');
+    checker.setAttributeNS(null, 'id', 'p' + player + 'c' + i);
+    checker.setAttributeNS(null, 'r', '20');
+    checker.setAttributeNS(null, 'stroke', 'black');
+    checker.setAttributeNS(null, 'stroke-width', '1');
+    checker.setAttributeNS(null, 'fill', fill);
+    document.getElementById('svgObj').appendChild(checker);
+    if (player === 1 && i === 15) {
+      i = 0;
+      player = 2;
+    }
+  }
+
+  for (i = 1; i <= 7; i++) {
+    dx = di === 1 ? (i === 7 ? '130' : (isEven(i)  ? '141' : '119') ) : (i === 7 ? '190' : (isEven(i)  ? '201' : '179') );
+    dy = i <= 2 ? 294 : ( i <= 4 ? 305 : ( i <= 6 ? 316 : 305));
+
+    if (i === 1){
+      rx = di === 1 ? '110' : '170';
+      rect = document.createElementNS(svgns, 'rect');
+      rect.setAttributeNS(null, 'id', 'd' + di);
+      rect.setAttributeNS(null, 'stroke', 'black');
+      rect.setAttributeNS(null, 'stroke-width', '1');
+      rect.setAttributeNS(null, 'fill', 'orange');
+      rect.setAttributeNS(null, 'width', '40');
+      rect.setAttributeNS(null, 'height', '40');
+      rect.setAttributeNS(null, 'x', rx);
+      rect.setAttributeNS(null, 'y', '285');
+      document.getElementById('svgObj').appendChild(rect);
+    }
+    dot = document.createElementNS(svgns, 'circle');
+    dot.setAttributeNS(null, 'id', 'd' + di + 'd' + i);
+    dot.setAttributeNS(null, 'r', '4');
+    dot.setAttributeNS(null, 'stroke', 'black');
+    dot.setAttributeNS(null, 'stroke-width', '1');
+    dot.setAttributeNS(null, 'fill', 'black');
+    dot.setAttributeNS(null, 'cx', dx);
+    dot.setAttributeNS(null, 'cy', dy);
+    document.getElementById('svgObj').appendChild(dot);
+
+    if (di === 1 && i === 7) {
+      i = 0;
+      di = 2;
+    }
+  }
+
+  initiated = true;
+}
+
+function populateBoard() {
+  var player;
   var element;
   var checker;
   var res;
@@ -19,19 +83,8 @@ function populateBoard() {
   var fill;
   var checkers = [];
 
-  for (i = 1; i <= 15; i++) {
-    fill = player === 1 ? 'yellow' : 'brown';
-    checker = document.createElement('circle');
-    checker.setAttribute('id', 'p' + player + 'c' + i);
-    checker.setAttribute('r', '20');
-    checker.setAttribute('stroke', 'black');
-    checker.setAttribute('stroke-width', '1');
-    checker.setAttribute('fill', fill);
-    document.getElementById('svgObj').appendChild(checker);
-    if (player === 1 && i === 15) {
-      i = 0;
-      player = 2;
-    }
+  if (!initiated) {
+    initiate();
   }
 
 	for (i = 1; i <= 24; i++) {
@@ -112,7 +165,7 @@ function populateBoard() {
 		checker = "p2c" + i;
 		res = calcCheckerXY(5, 2);
 		moveChecker("p2c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 6);
+		document.getElementById(checker).setAttribute("onPoint", 5);
 		$("#" + checker).click(function () {
 				$(this)
 					.attr("fill", "purple");
@@ -123,7 +176,7 @@ function populateBoard() {
 		checker = "p2c" + i;
 		res = calcCheckerXY(7, 2);
 		moveChecker("p2c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 8);
+		document.getElementById(checker).setAttribute("onPoint", 7);
 		$("#" + checker).click(function () {
 				$(this)
 					.attr("fill", "purple");
@@ -181,7 +234,7 @@ function highlightPoints(checker) {
 			.attr("fill", "green");
 		$("#" + point1)
 			.click(function () {
-				pointClick(checkerID, document.getElementById(point1), "1");
+				pointClick(checkerID, document.getElementById(point1), player);
 			});
 	}
 	if (d2Active) {
@@ -189,7 +242,7 @@ function highlightPoints(checker) {
 			.attr("fill", "green");
 		$("#" + point2)
 			.click(function () {
-				pointClick(checkerID, document.getElementById(point2), "1");
+				pointClick(checkerID, document.getElementById(point2), player);
 			});
 	}
 	hotpoint1 = point1;
@@ -231,13 +284,13 @@ function pointClick(checkerID, point, player) {
 	resetPoints();
 	if (player == "1") {
 		$("#" + checkerID)
-			.attr("fill", "yellow");
+			.attr("fill", p1CheckerFill);
 	} else {
 		$("#" + checkerID)
-			.attr("fill", "red");
+			.attr("fill", p2CheckerFill);
 	}
-	if (pointNumber(point) == document.getElementById("d1value")
-		.value) {
+  var distance = Math.abs(document.getElementById("d1value").value - document.getElementById('p2c13').getAttribute('onPoint'));
+	if (pointNumber(point) == distance && d1Active) {
 		d1Active = false;
 		$("#d1")
 			.css("visibility", "hidden");
@@ -257,6 +310,7 @@ function moveChecker(checkerID, x, y) {
 }
 
 function calcCheckerXY(point, player) {
+  console.log(player);
 	var result = [];
 	var count = points[point].count;
 	if (points[point].player == 0) {
@@ -280,6 +334,7 @@ function calcCheckerXY(point, player) {
 	} else {
 		result = false;
 	}
+  console.log('calccheckerresult = '+ result);
 	return result;
 }
 
