@@ -117,81 +117,43 @@ function populateBoard() {
 	}
 
 	for (i = 1; i <= 2; i++) {
-		checker = "p1c" + i;
-		res = calcCheckerXY(1, 1);
-		moveChecker(checker, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 1);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(1, i, 1, 1);
 	}
 	for (i = 3; i <= 7; i++) {
-		checker = "p1c" + i;
-		res = calcCheckerXY(12, 1);
-		moveChecker("p1c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 12);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(1, i, 12, 1);
 	}
 	for (i = 8; i <= 10; i++) {
-		checker = "p1c" + i;
-		res = calcCheckerXY(17, 1);
-		moveChecker("p1c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 17);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(1, i, 17, 1);
 	}
 	for (i = 11; i <= 15; i++) {
-		checker = "p1c" + i;
-		res = calcCheckerXY(19, 1);
-		moveChecker("p1c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 19);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(1, i, 19, 1);
 	}
 
 
 	for (i = 1; i <= 5; i++) {
-		checker = "p2c" + i;
-		res = calcCheckerXY(5, 2);
-		moveChecker("p2c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 5);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(2, i, 5, 2);
 	}
 	for (i = 6; i <= 8; i++) {
-		checker = "p2c" + i;
-		res = calcCheckerXY(7, 2);
-		moveChecker("p2c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 7);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(2, i, 7, 2);
 	}
 	for (i = 9; i <= 13; i++) {
-		checker = "p2c" + i;
-		res = calcCheckerXY(13, 2);
-		moveChecker("p2c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 13);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(2, i, 13, 2);
 	}
 	for (i = 14; i <= 15; i++) {
-		checker = "p2c" + i;
-		res = calcCheckerXY(24, 2);
-		moveChecker("p2c" + i, res[0], res[1]);
-		document.getElementById(checker).setAttribute("onPoint", 24);
-		$("#" + checker).click(function () {
-				highlightPoints(this);
-			});
+    populateChecker(2, i, 24, 2);
 	}
 
 	hideDice();
+}
+
+function populateChecker(player, checkerIndex, checkerX, checkerY){
+  checker = 'p' + player + 'c' + checkerIndex;
+  res = calcCheckerXY(checkerX, checkerY);
+  moveChecker('p' + player + 'c' + checkerIndex, res[0], res[1]);
+  document.getElementById(checker).setAttribute("onPoint", checkerY);
+  $("#" + checker).click(function () {
+      highlightPoints(this);
+    });
 }
 
 function highlightPoints(checker) {
