@@ -7,6 +7,7 @@ var element;
 var initiated = false;
 var p1CheckerFill = 'yellow';
 var p2CheckerFill = 'brown';
+var pointActiveFill = 'green';
 
 function onLoad(populateBoard) {
 	//svg.text(10, 20, error || 'Loaded into ' + this.id);
@@ -231,15 +232,16 @@ function highlightPoints(checker) {
 	}
 	if (d1Active) {
 		$("#" + point1)
-			.attr("fill", "green");
+			.attr("fill", pointActiveFill);
 		$("#" + point1)
 			.click(function () {
 				pointClick(checkerID, document.getElementById(point1), player);
 			});
 	}
-	if (d2Active) {
+
+	if (d2Active & (!d1Active || point1 !== point2)) {
 		$("#" + point2)
-			.attr("fill", "green");
+			.attr("fill", pointActiveFill);
 		$("#" + point2)
 			.click(function () {
 				pointClick(checkerID, document.getElementById(point2), player);
@@ -290,7 +292,7 @@ function pointClick(checkerID, point, player) {
 			.attr("fill", p2CheckerFill);
 	}
   var distance = Math.abs(document.getElementById("d1value").value - document.getElementById('p2c13').getAttribute('onPoint'));
-	if (pointNumber(point) == distance && d1Active) {
+	if (d1Active && pointNumber(point) == distance) {
 		d1Active = false;
 		$("#d1")
 			.css("visibility", "hidden");
@@ -299,6 +301,7 @@ function pointClick(checkerID, point, player) {
 		$("#d2")
 			.css("visibility", "hidden");
 	}
+
 	return true;
 }
 
@@ -310,7 +313,6 @@ function moveChecker(checkerID, x, y) {
 }
 
 function calcCheckerXY(point, player) {
-  console.log(player);
 	var result = [];
 	var count = points[point].count;
 	if (points[point].player == 0) {
@@ -334,7 +336,6 @@ function calcCheckerXY(point, player) {
 	} else {
 		result = false;
 	}
-  console.log('calccheckerresult = '+ result);
 	return result;
 }
 
