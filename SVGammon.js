@@ -170,31 +170,31 @@ function highlightPoints(checker) {
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
 	if (player == 1) {
-		point1 = "t" + (numOnPoint + numD1);
-		point2 = "t" + (numOnPoint + numD2);
+		point1 = (numOnPoint + numD1);
+		point2 = (numOnPoint + numD2);
 	} else {
-		point1 = "t" + (numOnPoint - numD1);
-		point2 = "t" + (numOnPoint - numD2);
+		point1 = (numOnPoint - numD1);
+		point2 = (numOnPoint - numD2);
 	}
-	if (d1Active) {
-		$("#" + point1)
+	if (d1Active && (points[point1].player === 0 || points[point1].player === player)) {
+		$('#t' + point1)
 			.attr("fill", pointActiveFill);
-		$("#" + point1)
+		$('#t' + point1)
 			.click(function () {
-				pointClick(checkerID, document.getElementById(point1), player);
+				pointClick(checkerID, document.getElementById('t' + point1), player);
 			});
 	}
 
-	if (d2Active & (!d1Active || point1 !== point2)) {
-		$("#" + point2)
+	if (d2Active && (!d1Active || point1 !== point2) && (points[point2].player === 0 || points[point2].player === player)) {
+		$('#t' + point2)
 			.attr("fill", pointActiveFill);
-		$("#" + point2)
+		$('#t' + point2)
 			.click(function () {
-				pointClick(checkerID, document.getElementById(point2), player);
+				pointClick(checkerID, document.getElementById('t' + point2), player);
 			});
 	}
-	hotpoint1 = point1;
-	hotpoint2 = point2;
+	hotpoint1 = 't' + point1;
+	hotpoint2 = 't' + point2;
 }
 
 function resetPoint(point) {
