@@ -212,17 +212,17 @@ function populateBoard() {
 
 function highlightPoints(checker) {
 	var onPoint = checker.getAttribute("onPoint");
-	var d1val = document.getElementById("d1value")
+	var d1Val = document.getElementById("d1value")
 		.value;
-	var d2val = document.getElementById("d2value")
+	var d2Val = document.getElementById("d2value")
 		.value;
 	var checkerID = checker.id;
 	var player = checker.id.split("p")[1].split("c")[0];
 	var point1;
 	var point2;
 	var numOnPoint = parseFloat(onPoint);
-	var numD1 = parseFloat(d1val);
-	var numD2 = parseFloat(d2val);
+	var numD1 = parseFloat(d1Val);
+	var numD2 = parseFloat(d2Val);
 	if (player == 1) {
 		point1 = "t" + (numOnPoint + numD1);
 		point2 = "t" + (numOnPoint + numD2);
@@ -282,6 +282,7 @@ function isNumber(n) {
 
 function pointClick(checkerID, point, player) {
 	var res = calcCheckerXY(pointNumber(point), player);
+  var checkerPoint = document.getElementById(checkerID).getAttribute('onPoint');
 	moveChecker(checkerID, res[0], res[1]);
 	resetPoints();
 	if (player == "1") {
@@ -291,8 +292,10 @@ function pointClick(checkerID, point, player) {
 		$("#" + checkerID)
 			.attr("fill", p2CheckerFill);
 	}
-  var distance = Math.abs(document.getElementById("d1value").value - document.getElementById('p2c13').getAttribute('onPoint'));
-	if (d1Active && pointNumber(point) == distance) {
+  var distance = Math.abs(checkerPoint - pointNumber(point));
+  console.log(distance);
+  console.log(document.getElementById("d1value").value);
+	if (d1Active && document.getElementById("d1value").value == distance) {
 		d1Active = false;
 		$("#d1")
 			.css("visibility", "hidden");
