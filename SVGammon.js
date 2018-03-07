@@ -104,6 +104,13 @@ function populateBoard() {
 			player: 0
 		};
 	}
+
+  points[100] = {
+    id: 100,
+    count: 0,
+    player: 0
+  };
+
 	for (i = 1; i <= 6; i++) {
 		element = "t" + (13 - i);
 		document.getElementById("t" + (13 - i))
@@ -126,38 +133,38 @@ function populateBoard() {
 	}
 
 	for (i = 1; i <= 2; i++) {
-    initiateChecker(1, i, 1, 1);
+    initiateChecker(1, i, 1);
 	}
 	for (i = 3; i <= 7; i++) {
-    initiateChecker(1, i, 12, 1);
+    initiateChecker(1, i, 12);
 	}
 	for (i = 8; i <= 10; i++) {
-    initiateChecker(1, i, 17, 1);
+    initiateChecker(1, i, 17);
 	}
 	for (i = 11; i <= 15; i++) {
-    initiateChecker(1, i, 19, 1);
+    initiateChecker(1, i, 19);
 	}
 
 
 	for (i = 1; i <= 5; i++) {
-    initiateChecker(2, i, 5, 2);
+    initiateChecker(2, i, 5);
 	}
 	for (i = 6; i <= 8; i++) {
-    initiateChecker(2, i, 7, 2);
+    initiateChecker(2, i, 7);
 	}
 	for (i = 9; i <= 13; i++) {
-    initiateChecker(2, i, 13, 2);
+    initiateChecker(2, i, 13);
 	}
 	for (i = 14; i <= 15; i++) {
-    initiateChecker(2, i, 24, 2);
+    initiateChecker(2, i, 24);
 	}
 
 	hideDice();
 }
 
-function initiateChecker(player, checkerIndex, checkerX, checkerY){
+function initiateChecker(player, checkerIndex, point){
   checker = 'p' + player + 'c' + checkerIndex;
-  moveChecker( checker, checkerX, player);
+  moveChecker( checker, point, player);
   $("#" + checker).click(function () {
       highlightPoints(this);
     });
@@ -191,7 +198,7 @@ function highlightPoints(checker) {
 
   if ( player === activePlayer)
   {
-  	if (d1Active && (points[point1] && (points[point1].player === 0 || points[point1].player === player))) {
+  	if (d1Active && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1)) {
       canPlay = true;
   		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
   		$('#t' + point1).click(function () {
@@ -199,7 +206,7 @@ function highlightPoints(checker) {
   			});
   	}
 
-  	if (d2Active && (!d1Active || point1 !== point2) && (points[point2] && (points[point2].player === 0 || points[point2].player === player))) {
+  	if (d2Active && (!d1Active || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1)) {
       canPlay = true;
   		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
   		$('#t' + point2).click(function () {
@@ -311,34 +318,38 @@ function calcCheckerXY(pointNumber, player) {
 	var result = [];
 	var count;
 
+  if (pointNumber != 100 && points[pointNumber].player != 0 && points[pointNumber].player != player) {
+    //Send opponent to bar
+    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), 100, points[pointNumber].player);
+  }
+
+  points[pointNumber].player = player;
   count = points[pointNumber].count;
-	if (points[pointNumber].player == 0) {
-		points[pointNumber].player = player;
-	}
-	if (count <= 1 || points[pointNumber].player == player) {
-    if (pointNumber === 0) {
-			result[0] = 580 - (pointNumber * 40);
-			result[1] = (count * 42) + 21;
-		} else if (pointNumber <= 6) {
-			result[0] = 580 - (pointNumber * 40);
-			result[1] = (count * 42) + 21;
-		} else if (pointNumber <= 12) {
-			result[0] = 540 - (pointNumber * 40);
-			result[1] = (count * 42) + 21;
-		} else if (pointNumber <= 18) {
-			result[0] = 20 + ((pointNumber - 12) * 40);
-			result[1] = 550 - (count * 42) + 21;
-		} else if (pointNumber <= 24) {
-			result[0] = 60 + ((pointNumber - 12) * 40);
-			result[1] = 550 - (count * 42) + 21;
-		} else {
-			result[0] = 60 + ((pointNumber - 12) * 40);
-			result[1] = 550 - (count * 42) + 21;
-		}
-		points[pointNumber].count++;
+
+  if (pointNumber <= 6) {
+		result[0] = 580 - (pointNumber * 40);
+		result[1] = (count * 42) + 21;
+	} else if (pointNumber <= 12) {
+		result[0] = 540 - (pointNumber * 40);
+		result[1] = (count * 42) + 21;
+	} else if (pointNumber <= 18) {
+		result[0] = 20 + ((pointNumber - 12) * 40);
+		result[1] = 550 - (count * 42) + 21;
+	} else if (pointNumber <= 25) {
+		result[0] = 60 + ((pointNumber - 12) * 40);
+		result[1] = 550 - (count * 42) + 21;
 	} else {
-		result = false;
+    if (player == 1) {
+  		result[0] = 300;
+  		result[1] = 550 - (count * 42) + 21;
+    }
+    else {
+  		result[0] = 300;
+  		result[1] = 550 - (count * 42) + 21;
+    }
 	}
+	points[pointNumber].count++;
+
 	return result;
 }
 
