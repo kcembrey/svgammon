@@ -97,6 +97,7 @@ function populateBoard() {
     initiate();
   }
 
+  //Populate points list
 	for (i = 0; i <= 25; i++) {
 		points[i] = {
 			id: i,
@@ -105,11 +106,14 @@ function populateBoard() {
 		};
 	}
 
-  points[100] = {
-    id: 100,
-    count: 0,
-    player: 0
-  };
+  //Populate bar points
+  for (i = 100; i <= 200; i+= 100) {
+    points[i] = {
+      id: i,
+      count: 0,
+      player: 0
+    };
+  }
 
 	for (i = 1; i <= 6; i++) {
 		element = "t" + (13 - i);
@@ -318,9 +322,9 @@ function calcCheckerXY(pointNumber, player) {
 	var result = [];
 	var count;
 
-  if (pointNumber != 100 && points[pointNumber].player != 0 && points[pointNumber].player != player) {
+  if (pointNumber != 100 && pointNumber != 200 && points[pointNumber].player != 0 && points[pointNumber].player != player) {
     //Send opponent to bar
-    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), 100, points[pointNumber].player);
+    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), player == 2 ? 100 : 200, points[pointNumber].player);
   }
 
   points[pointNumber].player = player;
@@ -338,15 +342,12 @@ function calcCheckerXY(pointNumber, player) {
 	} else if (pointNumber <= 25) {
 		result[0] = 60 + ((pointNumber - 12) * 40);
 		result[1] = 550 - (count * 42) + 21;
-	} else {
-    if (player == 1) {
-  		result[0] = 300;
-  		result[1] = 550 - (count * 42) + 21;
-    }
-    else {
-  		result[0] = 300;
-  		result[1] = 550 - (count * 42) + 21;
-    }
+	} else if (pointNumber == 100)  {
+    result[0] = 300;
+    result[1] = 550 - (count * 42) + 21;
+  } else {
+		result[0] = 300;
+		result[1] = (count * 42) + 21;
 	}
 	points[pointNumber].count++;
 
