@@ -7,11 +7,13 @@ var element;
 var initiated = false;
 var p1CheckerFill = 'yellow';
 var p2CheckerFill = 'brown';
+var activeCheckerFill = 'purple';
+var noPlayCheckerFill = 'maroon';
 var pointActiveFill = 'green';
 var edgeActiveFill = 'orange';
 var edgeInActiveFill = 'blue';
-var evenPointInactiveFill = 'red';
-var oddPointInactiveFill = 'black';
+var evenPointInactiveFill = 'black';
+var oddPointInactiveFill = 'red';
 var activeChecker;
 
 function onLoad(populateBoard) {
@@ -162,17 +164,16 @@ function initiateChecker(player, checkerIndex, checkerX, checkerY){
 
 function highlightPoints(checker) {
 	var onPoint = checker.getAttribute("onPoint");
-	var d1Val = document.getElementById("d1value")
-		.value;
-	var d2Val = document.getElementById("d2value")
-		.value;
+	var d1Val = document.getElementById("d1value").value;
+	var d2Val = document.getElementById("d2value").value;
 	var checkerID = checker.id;
-	var player = checker.id.split("p")[1].split("c")[0];
+	var player = parseFloat(checker.id.split("p")[1].split("c")[0]);
 	var point1;
 	var point2;
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
+  var canPlay = false;
 
 	if (player == 1) {
 		point1 = (numOnPoint + numD1);
@@ -185,12 +186,9 @@ function highlightPoints(checker) {
   resetActive();
 
   activeChecker = checker;
-  $(checker).attr('fill', 'purple');
-
-  console.log(point1);
-  console.log(point2);
 
 	if (d1Active && (points[point1] && (points[point1].player === 0 || points[point1].player === player))) {
+    canPlay = true;
 		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
 		$('#t' + point1).click(function () {
 				pointClick(checkerID, document.getElementById('t' + point1), player);
@@ -198,14 +196,25 @@ function highlightPoints(checker) {
 	}
 
 	if (d2Active && (!d1Active || point1 !== point2) && (points[point2] && (points[point2].player === 0 || points[point2].player === player))) {
+    canPlay = true;
 		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
 		$('#t' + point2).click(function () {
 				pointClick(checkerID, document.getElementById('t' + point2), player);
 			});
 	}
 
-    hotpoint1 = 't' + point1;
-    hotpoint2 = 't' + point2;
+  if (canPlay) {
+    $(checker).attr('fill', activeCheckerFill);
+  }
+  else {
+      $(checker).attr('fill', noPlayCheckerFill);
+      setTimeout(function(){
+        $(checker).attr('fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+      }, 500);
+  }
+
+  hotpoint1 = 't' + point1;
+  hotpoint2 = 't' + point2;
 }
 
 function resetActive() {
@@ -216,24 +225,26 @@ function resetActive() {
   }
 }
 
-function resetPoint(point) {
-	$(point).unbind("click");
-  var pointN = pointNumber(point);
-  console.log('pointN - ' + pointN);
-  if (pointN === 0 || pointN === 25 ) {
-    $(point).attr("fill", edgeInActiveFill);
-  }
-	else if (isEven(pointN)) {
-		$(point).attr("fill", evenPointInactiveFill);
-	}
-  else {
-		$(point).attr("fill", oddPointInactiveFill);
-	}
-}
-
 function resetPoints() {
+  console.log(document.getElementById(hotpoint1));
 	resetPoint(document.getElementById(hotpoint1));
 	resetPoint(document.getElementById(hotpoint2));
+}
+
+function resetPoint(point) {
+  if(point){
+  	$(point).unbind("click");
+    var pointN = pointNumber(point);
+    if (pointN === 0 || pointN === 25 ) {
+      $(point).attr("fill", edgeInActiveFill);
+    }
+  	else if (isEven(pointN)) {
+  		$(point).attr("fill", evenPointInactiveFill);
+  	}
+    else {
+  		$(point).attr("fill", oddPointInactiveFill);
+  	}
+  }
 }
 
 function pointNumber(point) {
