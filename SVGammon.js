@@ -1,6 +1,9 @@
 var points = [];
-var d1Active = false;
-var d2Active = false;
+var diceActive = [false, false];
+var diceDoubles = [false, false];
+var doubleDiceFill = 'orangered';
+var singleDiceFill = 'orange';
+var emptyDiceFill = 'white';
 var hotpoint1 = 0;
 var hotpoint2 = 0;
 var element;
@@ -24,7 +27,7 @@ function onLoad(populateBoard) {
 
 function initiate(){
   var checker;
-  var di = 1;
+  var di = 0;
   var dot;
   var player = 1;
   var cx;
@@ -48,11 +51,11 @@ function initiate(){
   }
 
   for (i = 1; i <= 7; i++) {
-    dx = di === 1 ? (i === 7 ? '130' : (isEven(i)  ? '141' : '119') ) : (i === 7 ? '190' : (isEven(i)  ? '201' : '179') );
+    dx = di === 0 ? (i === 7 ? '130' : (isEven(i)  ? '141' : '119') ) : (i === 7 ? '190' : (isEven(i)  ? '201' : '179') );
     dy = i <= 2 ? 294 : ( i <= 4 ? 305 : ( i <= 6 ? 316 : 305));
 
     if (i === 1){
-      rx = di === 1 ? '110' : '170';
+      rx = di === 0 ? '110' : '170';
       rect = document.createElementNS(svgns, 'rect');
       rect.setAttributeNS(null, 'id', 'd' + di);
       rect.setAttributeNS(null, 'stroke', 'black');
@@ -74,9 +77,9 @@ function initiate(){
     dot.setAttributeNS(null, 'cy', dy);
     document.getElementById('svgObj').appendChild(dot);
 
-    if (di === 1 && i === 7) {
+    if (di === 0 && i === 7) {
       i = 0;
-      di = 2;
+      di = 1;
     }
   }
 
@@ -202,7 +205,7 @@ function highlightPoints(checker) {
 
   if ( player === activePlayer)
   {
-  	if (d1Active && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1)) {
+  	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1)) {
       canPlay = true;
   		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
   		$('#t' + point1).click(function () {
@@ -210,7 +213,7 @@ function highlightPoints(checker) {
   			});
   	}
 
-  	if (d2Active && (!d1Active || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1)) {
+  	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1)) {
       canPlay = true;
   		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
   		$('#t' + point2).click(function () {
@@ -286,17 +289,13 @@ function pointClick(checkerID, point, player) {
 			.attr("fill", p2CheckerFill);
 	}
   var distance = Math.abs(checkerPoint - pointNumber(point));
-	if (d1Active && document.getElementById("d1value").value == distance) {
-		d1Active = false;
-		$("#d1")
-			.css("visibility", "hidden");
+	if (diceActive[0] && document.getElementById("d1value").value == distance) {
+    updateDi(0);
 	} else {
-		d2Active = false;
-		$("#d2")
-			.css("visibility", "hidden");
+    updateDi(1);
 	}
 
-  if (!d1Active && !d2Active){
+  if (!diceActive[0] && !diceActive[1]){
     activePlayer = activePlayer === 1 ? 2 : 1;
     document.getElementById('playerLabel').innerHTML = activePlayer;
   }
@@ -356,65 +355,64 @@ function calcCheckerXY(pointNumber, player) {
 
 function rollDice() {
   resetActive();
-	showDice();
 	clearDice();
 	var value1 = Math.floor((Math.random() * 6) + 1);
 	var value2 = Math.floor((Math.random() * 6) + 1);
-	document.getElementById("d1value")
-		.value = value1;
-	document.getElementById("d2value")
-		.value = value2;
-	populateDi(1, value1);
-	populateDi(2, value2);
-	d1Active = true;
-	d2Active = true;
+	document.getElementById("d1value").value = value1;
+	document.getElementById("d2value").value = value2;
+	showDice(value1 === value2);
+	populateDi(0, value1);
+	populateDi(1, value2);
+	diceActive[0] = true;
+	diceActive[1] = true;
 }
 
 function populateDi(di, number) {
 	if (number == 1 || number == 3 || number == 5) {
-		$("#d" + di + "d7")
-			.css("visibility", "visible");
+		$("#d" + di + "d7").css("visibility", "visible");
 	}
 	if (number >= 2) {
-		$("#d" + di + "d1")
-			.css("visibility", "visible");
-		$("#d" + di + "d6")
-			.css("visibility", "visible");
+		$("#d" + di + "d1").css("visibility", "visible");
+		$("#d" + di + "d6").css("visibility", "visible");
 	}
 	if (number >= 4) {
-		$("#d" + di + "d2")
-			.css("visibility", "visible");
-		$("#d" + di + "d5")
-			.css("visibility", "visible");
+		$("#d" + di + "d2").css("visibility", "visible");
+		$("#d" + di + "d5").css("visibility", "visible");
 	}
 	if (number == 6) {
-		$("#d" + di + "d3")
-			.css("visibility", "visible");
-		$("#d" + di + "d4")
-			.css("visibility", "visible");
+		$("#d" + di + "d3").css("visibility", "visible");
+		$("#d" + di + "d4").css("visibility", "visible");
 	}
 }
 
 function hideDice() {
-	$("#d1")
-		.css("visibility", "hidden");
-	$("#d2")
-		.css("visibility", "hidden");
+	$("#d0").css("visibility", "hidden");
+	$("#d1").css("visibility", "hidden");
 	clearDice();
 }
 
 function clearDice() {
 	for (i = 1; i <= 7; i++) {
-		$("#d1d" + i)
-			.css("visibility", "hidden");
-		$("#d2d" + i)
-			.css("visibility", "hidden");
+		$("#d0d" + i).css("visibility", "hidden");
+		$("#d1d" + i).css("visibility", "hidden");
 	}
 }
 
-function showDice() {
-	$("#d1")
-		.css("visibility", "visible");
-	$("#d2")
-		.css("visibility", "visible");
+function updateDi(diNumber){
+  if (diceDoubles[diNumber]) {
+    diceDoubles[diNumber] = false;
+    $('#d' + diNumber).css('fill', singleDiceFill);
+  }
+  else {
+    diceActive[diNumber] = false;
+    $('#d' + diNumber).css('fill', emptyDiceFill);
+  }
+}
+
+function showDice(doubles) {
+  diceDoubles = [doubles,doubles];
+  $("#d0").css('fill', doubles ? doubleDiceFill : singleDiceFill);
+	$("#d0").css("visibility", "visible");
+  $("#d1").css('fill', doubles ? doubleDiceFill : singleDiceFill);
+	$("#d1").css("visibility", "visible");
 }
