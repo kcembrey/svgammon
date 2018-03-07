@@ -8,6 +8,10 @@ var initiated = false;
 var p1CheckerFill = 'yellow';
 var p2CheckerFill = 'brown';
 var pointActiveFill = 'green';
+var edgeActiveFill = 'orange';
+var edgeInActiveFill = 'blue';
+var evenPointInactiveFill = 'red';
+var oddPointInactiveFill = 'black';
 var activeChecker;
 
 function onLoad(populateBoard) {
@@ -89,7 +93,7 @@ function populateBoard() {
     initiate();
   }
 
-	for (i = 1; i <= 24; i++) {
+	for (i = 0; i <= 25; i++) {
 		points[i] = {
 			id: i,
 			count: 0,
@@ -183,27 +187,25 @@ function highlightPoints(checker) {
   activeChecker = checker;
   $(checker).attr('fill', 'purple');
 
-console.log(point1);
-console.log(point2);
-	if (d1Active && (points[point1].player === 0 || points[point1].player === player)) {
-		$('#t' + point1)
-			.attr("fill", pointActiveFill);
-		$('#t' + point1)
-			.click(function () {
+  console.log(point1);
+  console.log(point2);
+
+	if (d1Active && (points[point1] && (points[point1].player === 0 || points[point1].player === player))) {
+		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
+		$('#t' + point1).click(function () {
 				pointClick(checkerID, document.getElementById('t' + point1), player);
 			});
 	}
 
-	if (d2Active && (!d1Active || point1 !== point2) && (points[point2].player === 0 || points[point2].player === player)) {
-		$('#t' + point2)
-			.attr("fill", pointActiveFill);
-		$('#t' + point2)
-			.click(function () {
+	if (d2Active && (!d1Active || point1 !== point2) && (points[point2] && (points[point2].player === 0 || points[point2].player === player))) {
+		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
+		$('#t' + point2).click(function () {
 				pointClick(checkerID, document.getElementById('t' + point2), player);
 			});
 	}
-	hotpoint1 = 't' + point1;
-	hotpoint2 = 't' + point2;
+
+    hotpoint1 = 't' + point1;
+    hotpoint2 = 't' + point2;
 }
 
 function resetActive() {
@@ -215,14 +217,17 @@ function resetActive() {
 }
 
 function resetPoint(point) {
-	$(point)
-		.unbind("click");
-	if (isEven(pointNumber(point))) {
-		$(point)
-			.attr("fill", "black");
-	} else {
-		$(point)
-			.attr("fill", "red");
+	$(point).unbind("click");
+  var pointN = pointNumber(point);
+  console.log('pointN - ' + pointN);
+  if (pointN === 0 || pointN === 25 ) {
+    $(point).attr("fill", edgeInActiveFill);
+  }
+	else if (isEven(pointN)) {
+		$(point).attr("fill", evenPointInactiveFill);
+	}
+  else {
+		$(point).attr("fill", oddPointInactiveFill);
 	}
 }
 
@@ -232,7 +237,7 @@ function resetPoints() {
 }
 
 function pointNumber(point) {
-	return point.id.split("t")[1];
+	return parseFloat(point.id.split("t")[1]);
 }
 
 function isEven(n) {
@@ -274,20 +279,23 @@ function moveChecker(checkerID, pointNumber, player) {
 
   res = calcCheckerXY(pointNumber, player);
   document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
-	document.getElementById(checkerID)
-		.setAttribute("cx", res[0]);
-	document.getElementById(checkerID)
-		.setAttribute("cy", res[1]);
+	document.getElementById(checkerID).setAttribute("cx", res[0]);
+	document.getElementById(checkerID).setAttribute("cy", res[1]);
 }
 
 function calcCheckerXY(pointNumber, player) {
 	var result = [];
-	var count = points[pointNumber].count;
+	var count;
+
+  count = points[pointNumber].count;
 	if (points[pointNumber].player == 0) {
 		points[pointNumber].player = player;
 	}
 	if (count <= 1 || points[pointNumber].player == player) {
-		if (pointNumber <= 6) {
+    if (pointNumber === 0) {
+			result[0] = 580 - (pointNumber * 40);
+			result[1] = (count * 42) + 21;
+		} else if (pointNumber <= 6) {
 			result[0] = 580 - (pointNumber * 40);
 			result[1] = (count * 42) + 21;
 		} else if (pointNumber <= 12) {
@@ -297,6 +305,9 @@ function calcCheckerXY(pointNumber, player) {
 			result[0] = 20 + ((pointNumber - 12) * 40);
 			result[1] = 550 - (count * 42) + 21;
 		} else if (pointNumber <= 24) {
+			result[0] = 60 + ((pointNumber - 12) * 40);
+			result[1] = 550 - (count * 42) + 21;
+		} else {
 			result[0] = 60 + ((pointNumber - 12) * 40);
 			result[1] = 550 - (count * 42) + 21;
 		}
