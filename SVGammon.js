@@ -15,6 +15,7 @@ var edgeInActiveFill = 'blue';
 var evenPointInactiveFill = 'black';
 var oddPointInactiveFill = 'red';
 var activeChecker;
+var activePlayer = 1;
 
 function onLoad(populateBoard) {
 	//svg.text(10, 20, error || 'Loaded into ' + this.id);
@@ -79,6 +80,7 @@ function initiate(){
     }
   }
 
+  document.getElementById('playerLabel').innerHTML = activePlayer;
   initiated = true;
 }
 
@@ -187,21 +189,24 @@ function highlightPoints(checker) {
 
   activeChecker = checker;
 
-	if (d1Active && (points[point1] && (points[point1].player === 0 || points[point1].player === player))) {
-    canPlay = true;
-		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
-		$('#t' + point1).click(function () {
-				pointClick(checkerID, document.getElementById('t' + point1), player);
-			});
-	}
+  if ( player === activePlayer)
+  {
+  	if (d1Active && (points[point1] && (points[point1].player === 0 || points[point1].player === player))) {
+      canPlay = true;
+  		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
+  		$('#t' + point1).click(function () {
+  				pointClick(checkerID, document.getElementById('t' + point1), player);
+  			});
+  	}
 
-	if (d2Active && (!d1Active || point1 !== point2) && (points[point2] && (points[point2].player === 0 || points[point2].player === player))) {
-    canPlay = true;
-		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
-		$('#t' + point2).click(function () {
-				pointClick(checkerID, document.getElementById('t' + point2), player);
-			});
-	}
+  	if (d2Active && (!d1Active || point1 !== point2) && (points[point2] && (points[point2].player === 0 || points[point2].player === player))) {
+      canPlay = true;
+  		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
+  		$('#t' + point2).click(function () {
+  				pointClick(checkerID, document.getElementById('t' + point2), player);
+  			});
+  	}
+  }
 
   if (canPlay) {
     $(checker).attr('fill', activeCheckerFill);
@@ -279,6 +284,11 @@ function pointClick(checkerID, point, player) {
 		$("#d2")
 			.css("visibility", "hidden");
 	}
+
+  if (!d1Active && !d2Active){
+    activePlayer = activePlayer === 1 ? 2 : 1;
+    document.getElementById('playerLabel').innerHTML = activePlayer;
+  }
 
 	return true;
 }
