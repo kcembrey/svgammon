@@ -226,7 +226,6 @@ function resetActive() {
 }
 
 function resetPoints() {
-  console.log(document.getElementById(hotpoint1));
 	resetPoint(document.getElementById(hotpoint1));
 	resetPoint(document.getElementById(hotpoint2));
 }
@@ -271,8 +270,6 @@ function pointClick(checkerID, point, player) {
 			.attr("fill", p2CheckerFill);
 	}
   var distance = Math.abs(checkerPoint - pointNumber(point));
-  console.log(distance);
-  console.log(document.getElementById("d1value").value);
 	if (d1Active && document.getElementById("d1value").value == distance) {
 		d1Active = false;
 		$("#d1")
@@ -287,7 +284,13 @@ function pointClick(checkerID, point, player) {
 }
 
 function moveChecker(checkerID, pointNumber, player) {
-
+  var curPoint = document.getElementById(checkerID).getAttribute('onPoint');
+  if (curPoint) {
+      points[curPoint].count--;
+    if (points[curPoint].count === 0) {
+      points[curPoint].player = 0;
+    }
+  }
   res = calcCheckerXY(pointNumber, player);
   document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
 	document.getElementById(checkerID).setAttribute("cx", res[0]);
