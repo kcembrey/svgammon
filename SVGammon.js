@@ -358,17 +358,18 @@ function calcCheckerXY(pointNumber, player) {
 }
 
 function rollDice() {
+  var canPlay;
   resetActive();
 	clearDice();
 	var value1 = Math.floor((Math.random() * 6) + 1);
 	var value2 = Math.floor((Math.random() * 6) + 1);
 	document.getElementById("d1value").value = value1;
 	document.getElementById("d2value").value = value2;
-	showDice(value1 === value2);
 	populateDi(0, value1);
 	populateDi(1, value2);
-	diceActive[0] = true;
-	diceActive[1] = true;
+  canPlay = verifyCanPlay();
+	showDice(canPlay, value1 === value2);
+	diceActive = [canPlay,canPlay];
 }
 
 function populateDi(di, number) {
@@ -413,10 +414,25 @@ function updateDi(diNumber){
   }
 }
 
-function showDice(doubles) {
+function showDice(canPlay, doubles) {
   diceDoubles = [doubles,doubles];
-  $("#d0").css('fill', doubles ? doubleDiceFill : singleDiceFill);
+  $("#d0").css('fill', canPlay ? (doubles ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
 	$("#d0").css("visibility", "visible");
-  $("#d1").css('fill', doubles ? doubleDiceFill : singleDiceFill);
+  $("#d1").css('fill', canPlay ? (doubles ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
 	$("#d1").css("visibility", "visible");
+}
+
+function verifyCanPlay() {
+  var canPlay = true;
+  var playerOnBar = activePlayer === 1 ? points[100].count !== 0 : points[200].count !== 0;
+	var point1 = parseFloat(document.getElementById("d1value").value);
+	var point2 = parseFloat(document.getElementById("d2value").value);
+  if (activePlayer === 2) {
+    point1 = 25 - point1;
+    point2 = 25 - point2;
+  }
+  if (playerOnBar) {
+    canPlay = ((points[point1].player === activePlayer || points[point1].count === 0)) || ((points[point2].player === activePlayer || points[point2].count ===0));
+  }
+  return canPlay;
 }
