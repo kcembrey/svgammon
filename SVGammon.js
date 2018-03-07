@@ -189,21 +189,25 @@ function highlightPoints(checker) {
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
+  var playerOnBar = player === 1 ? points[100].count !== 0 : points[200].count !== 0;
+  var barPieceSelected = false;
   var canPlay = false;
 
 	if (player == 1) {
+    barPieceSelected = numOnPoint === 100;
+    numOnPoint = barPieceSelected ? 0 : numOnPoint;
 		point1 = (numOnPoint + numD1);
 		point2 = (numOnPoint + numD2);
 	} else {
+    barPieceSelected = numOnPoint === 200;
+    numOnPoint = barPieceSelected ? 25 : numOnPoint;
 		point1 = (numOnPoint - numD1);
 		point2 = (numOnPoint - numD2);
 	}
 
   resetActive();
-
   activeChecker = checker;
-
-  if ( player === activePlayer)
+  if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
   {
   	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1)) {
       canPlay = true;
