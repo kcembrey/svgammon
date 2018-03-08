@@ -329,6 +329,10 @@ function moveChecker(checkerID, pointNumber, player) {
   document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
 	document.getElementById(checkerID).setAttribute("cx", res[0]);
 	document.getElementById(checkerID).setAttribute("cy", res[1]);
+
+  if (points[pointNumber].count > 5) {
+    collapseCheckers(pointNumber);
+  }
 }
 
 function calcCheckerXY(pointNumber, player) {
@@ -445,4 +449,13 @@ function verifyCanPlay() {
     canPlay = ((points[point1].player === activePlayer || points[point1].count === 0)) || ((points[point2].player === activePlayer || points[point2].count ===0));
   }
   return canPlay;
+}
+
+function collapseCheckers(pointNumber){
+  $("[onPoint=" + pointNumber +"][collapsed!='true']").each(function() {
+    var curY = parseFloat($(this).attr('cy'));
+    var newY = pointNumber <= 12 ? curY / 2 : ((curY - 570) / 2) + 570;
+    $(this).attr('cy', newY);
+    $(this).attr('collapsed', 'true');
+  });
 }
