@@ -194,8 +194,16 @@ function highlightPoints(checker) {
   var playerOnBar = player === 1 ? points[p1BarPoint].count !== 0 : points[p2BarPoint].count !== 0;
   var barPieceSelected = false;
   var canPlay = false;
+  var canGoHome = false;
 
-	if (player == 1) {
+  if (player === 1) {
+    canGoHome = points[19].count + points[20].count + points[21].count + points[22].count + points[23].count + points[24].count + points[25].count === 15;
+  }
+  else {
+    canGoHome = points[0].count + points[1].count + points[2].count + points[3].count + points[4].count + points[5].count + points[6].count === 15;
+  }
+
+	if (player === 1) {
     barPieceSelected = numOnPoint === p1BarPoint;
     numOnPoint = barPieceSelected ? 0 : numOnPoint;
 		point1 = (numOnPoint + numD1);
@@ -211,7 +219,7 @@ function highlightPoints(checker) {
   activeChecker = checker;
   if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
   {
-  	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1)) {
+  	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
       canPlay = true;
   		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
   		$('#t' + point1).click(function () {
@@ -219,7 +227,7 @@ function highlightPoints(checker) {
   			});
   	}
 
-  	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1)) {
+  	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
       canPlay = true;
   		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
   		$('#t' + point2).click(function () {
