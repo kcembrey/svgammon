@@ -15,10 +15,12 @@ var noPlayCheckerFill = 'maroon';
 var pointActiveFill = 'green';
 var edgeActiveFill = 'orange';
 var edgeInActiveFill = 'blue';
-var evenPointInactiveFill = 'black';
+var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
 var activeChecker;
 var activePlayer = 1;
+var p1BarPoint = 200;
+var p2BarPoint = 100;
 
 function onLoad(populateBoard) {
 	//svg.text(10, 20, error || 'Loaded into ' + this.id);
@@ -110,7 +112,7 @@ function populateBoard() {
 	}
 
   //Populate bar points
-  for (i = 100; i <= 200; i+= 100) {
+  for (i = 100; i <= p1BarPoint; i+= p2BarPoint) {
     points[i] = {
       id: i,
       count: 0,
@@ -189,17 +191,17 @@ function highlightPoints(checker) {
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
-  var playerOnBar = player === 1 ? points[100].count !== 0 : points[200].count !== 0;
+  var playerOnBar = player === 1 ? points[p1BarPoint].count !== 0 : points[p2BarPoint].count !== 0;
   var barPieceSelected = false;
   var canPlay = false;
 
 	if (player == 1) {
-    barPieceSelected = numOnPoint === 100;
+    barPieceSelected = numOnPoint === p1BarPoint;
     numOnPoint = barPieceSelected ? 0 : numOnPoint;
 		point1 = (numOnPoint + numD1);
 		point2 = (numOnPoint + numD2);
 	} else {
-    barPieceSelected = numOnPoint === 200;
+    barPieceSelected = numOnPoint === p2BarPoint;
     numOnPoint = barPieceSelected ? 25 : numOnPoint;
 		point1 = (numOnPoint - numD1);
 		point2 = (numOnPoint - numD2);
@@ -325,9 +327,9 @@ function calcCheckerXY(pointNumber, player) {
 	var result = [];
 	var count;
 
-  if (pointNumber != 100 && pointNumber != 200 && points[pointNumber].player != 0 && points[pointNumber].player != player) {
+  if (pointNumber != p1BarPoint && pointNumber != p2BarPoint && points[pointNumber].player != 0 && points[pointNumber].player != player) {
     //Send opponent to bar
-    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), player == 2 ? 100 : 200, points[pointNumber].player);
+    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), player == 2 ? p1BarPoint : p2BarPoint, points[pointNumber].player);
   }
 
   points[pointNumber].player = player;
@@ -345,7 +347,7 @@ function calcCheckerXY(pointNumber, player) {
 	} else if (pointNumber <= 25) {
 		result[0] = 60 + ((pointNumber - 12) * 40);
 		result[1] = 550 - (count * 42) + 21;
-	} else if (pointNumber == 100)  {
+	} else if (pointNumber == p1BarPoint)  {
     result[0] = 300;
     result[1] = 550 - (count * 42) + 21;
   } else {
@@ -424,7 +426,7 @@ function showDice(canPlay, doubles) {
 
 function verifyCanPlay() {
   var canPlay = true;
-  var playerOnBar = activePlayer === 1 ? points[100].count !== 0 : points[200].count !== 0;
+  var playerOnBar = activePlayer === 1 ? points[p1BarPoint].count !== 0 : points[200].count !== 0;
 	var point1 = parseFloat(document.getElementById("d1value").value);
 	var point2 = parseFloat(document.getElementById("d2value").value);
   if (activePlayer === 2) {
