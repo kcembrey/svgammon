@@ -1,11 +1,12 @@
 var points = [];
-var diceActive = [false, false];
-var diceDoubles = [false, false];
+var diceActive;
+var diceDoubles;
 var doubleDiceFill = 'orangered';
 var singleDiceFill = 'orange';
 var emptyDiceFill = 'white';
-var hotpoint1 = 0;
-var hotpoint2 = 0;
+var diceDotFill = 'black';
+var hotpoint1;
+var hotpoint2;
 var element;
 var initiated = false;
 var p1CheckerFill = 'black';
@@ -17,12 +18,14 @@ var edgeActiveFill = 'orange';
 var edgeInActiveFill = 'blue';
 var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
-var activeChecker = null;
-var activePlayer = 1;
+var activeChecker;
+var activePlayer;
 var p1BarPoint = 200;
 var p2BarPoint = 100;
 
-function onLoad(populateBoard) {
+populateBoard();
+
+function onLoad() {
 	//svg.text(10, 20, error || 'Loaded into ' + this.id);
 	//resetSize(svg, null, null); //'100%', '100%');
 }
@@ -36,15 +39,15 @@ function initiate(){
   var cy;
   var rx;
   var svgns = 'http://www.w3.org/2000/svg';
+  var element;
 
   for (i = 1; i <= 15; i++) {
-    fill = player === 1 ? p1CheckerFill : p2CheckerFill;
     checker = document.createElementNS(svgns, 'circle');
     checker.setAttributeNS(null, 'id', 'p' + player + 'c' + i);
     checker.setAttributeNS(null, 'r', '20');
     checker.setAttributeNS(null, 'stroke', 'black');
     checker.setAttributeNS(null, 'stroke-width', '1');
-    checker.setAttributeNS(null, 'fill', fill);
+    checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
     document.getElementById('svgObj').appendChild(checker);
     if (player === 1 && i === 15) {
       i = 0;
@@ -62,7 +65,7 @@ function initiate(){
       rect.setAttributeNS(null, 'id', 'd' + di);
       rect.setAttributeNS(null, 'stroke', 'black');
       rect.setAttributeNS(null, 'stroke-width', '1');
-      rect.setAttributeNS(null, 'fill', 'orange');
+      rect.setAttributeNS(null, 'fill', singleDiceFill);
       rect.setAttributeNS(null, 'width', '40');
       rect.setAttributeNS(null, 'height', '40');
       rect.setAttributeNS(null, 'x', rx);
@@ -74,7 +77,7 @@ function initiate(){
     dot.setAttributeNS(null, 'r', '4');
     dot.setAttributeNS(null, 'stroke', 'black');
     dot.setAttributeNS(null, 'stroke-width', '1');
-    dot.setAttributeNS(null, 'fill', 'black');
+    dot.setAttributeNS(null, 'fill', diceDotFill);
     dot.setAttributeNS(null, 'cx', dx);
     dot.setAttributeNS(null, 'cy', dy);
     document.getElementById('svgObj').appendChild(dot);
@@ -83,41 +86,6 @@ function initiate(){
       i = 0;
       di = 1;
     }
-  }
-
-  document.getElementById('playerLabel').innerHTML = activePlayer;
-  initiated = true;
-}
-
-function populateBoard() {
-  var player;
-  var element;
-  var checker;
-  var res;
-  var i;
-  var fill;
-  var checkers = [];
-
-  if (!initiated) {
-    initiate();
-  }
-
-  //Populate points list
-	for (i = 0; i <= 25; i++) {
-		points[i] = {
-			id: i,
-			count: 0,
-			player: 0
-		};
-	}
-
-  //Populate bar points
-  for (i = 100; i <= p1BarPoint; i+= p2BarPoint) {
-    points[i] = {
-      id: i,
-      count: 0,
-      player: 0
-    };
   }
 
 	for (i = 1; i <= 6; i++) {
@@ -140,6 +108,44 @@ function populateBoard() {
 		document.getElementById("t" + (i + 12))
 			.setAttribute("points", (i * 40 + 40) + " 590, " + (i * 40 + 60) + " 360, " + (i * 40 + 80) + " 590");
 	}
+}
+
+function resetBoard() {
+  if(confirm('Are you sure you\'d like to reset the board?')){
+    populateBoard();
+  }
+}
+
+function populateBoard() {
+
+  if (!initiated) {
+    initiate();
+  }
+
+  activePlayer = 1;
+  activeChecker = null;
+  diceActive = [false, false];
+  diceDoubles = [false, false];
+  hotpoint1 = 0;
+  hotpoint2 = 0;
+
+  //Populate points list
+	for (i = 0; i <= 25; i++) {
+		points[i] = {
+			id: i,
+			count: 0,
+			player: 0
+		};
+	}
+
+  //Populate bar points
+  for (i = 100; i <= p1BarPoint; i+= p2BarPoint) {
+    points[i] = {
+      id: i,
+      count: 0,
+      player: 0
+    };
+  }
 
 	for (i = 1; i <= 2; i++) {
     initiateChecker(1, i, 1);
@@ -167,16 +173,21 @@ function populateBoard() {
 	for (i = 14; i <= 15; i++) {
     initiateChecker(2, i, 24);
 	}
-
+  initiated = true;
 	hideDice();
+
+  document.getElementById('playerLabel').innerHTML = activePlayer;
 }
 
 function initiateChecker(player, checkerIndex, point){
   checker = 'p' + player + 'c' + checkerIndex;
-  moveChecker( checker, point, player);
-  $("#" + checker).click(function () {
-      checkerClick(this);
-    });
+  moveChecker(checker, point, player, true);
+  if(!initiated){
+    console.log('setting checker click');
+    $("#" + checker).click(function () {
+        checkerClick(this);
+      });
+  }
 }
 
 
@@ -325,9 +336,13 @@ function pointClick(checkerID, point, player) {
 	return true;
 }
 
-function moveChecker(checkerID, pointNumber, player) {
+function moveChecker(checkerID, pointNumber, player){
+  moveChecker(checkerID, pointNumber, player, false);
+}
+
+function moveChecker(checkerID, pointNumber, player, clearBoard) {
   var curPoint = document.getElementById(checkerID).getAttribute('onPoint');
-  if (curPoint) {
+  if (!clearBoard && curPoint) {
       points[curPoint].count--;
     if (points[curPoint].count === 0) {
       points[curPoint].player = 0;
