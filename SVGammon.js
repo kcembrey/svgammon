@@ -17,7 +17,7 @@ var edgeActiveFill = 'orange';
 var edgeInActiveFill = 'blue';
 var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
-var activeChecker;
+var activeChecker = null;
 var activePlayer = 1;
 var p1BarPoint = 200;
 var p2BarPoint = 100;
@@ -175,12 +175,12 @@ function initiateChecker(player, checkerIndex, point){
   checker = 'p' + player + 'c' + checkerIndex;
   moveChecker( checker, point, player);
   $("#" + checker).click(function () {
-      highlightPoints(this);
+      checkerClick(this);
     });
 }
 
 
-function highlightPoints(checker) {
+function checkerClick(checker) {
 	var onPoint = checker.getAttribute("onPoint");
 	var d1Val = document.getElementById("d1value").value;
 	var d2Val = document.getElementById("d2value").value;
@@ -196,64 +196,77 @@ function highlightPoints(checker) {
   var canPlay = false;
   var canGoHome = false;
 
-  if (player === 1) {
-    canGoHome = points[19].count + points[20].count + points[21].count + points[22].count + points[23].count + points[24].count + points[25].count === 15;
+
+
+  if(activeChecker){
+    if (activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2)) {
+      pointClick(activeChecker.id, document.getElementById('t' + numOnPoint), player);
+    }
+    else {
+          $(checker).attr('fill', noPlayCheckerFill);
+          setTimeout(function(){
+            $(checker).attr('fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+          }, 500);
+    }
+
   }
   else {
-    canGoHome = points[0].count + points[1].count + points[2].count + points[3].count + points[4].count + points[5].count + points[6].count === 15;
-  }
-
-	if (player === 1) {
-    barPieceSelected = numOnPoint === p1BarPoint;
-    numOnPoint = barPieceSelected ? 0 : numOnPoint;
-		point1 = (numOnPoint + numD1);
-		point2 = (numOnPoint + numD2);
-	} else {
-    barPieceSelected = numOnPoint === p2BarPoint;
-    numOnPoint = barPieceSelected ? 25 : numOnPoint;
-		point1 = (numOnPoint - numD1);
-		point2 = (numOnPoint - numD2);
-	}
-
-  resetActive();
-  activeChecker = checker;
-  if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
-  {
-  	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
-      canPlay = true;
-  		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
-  		$('#t' + point1).click(function () {
-  				pointClick(checkerID, document.getElementById('t' + point1), player);
-  			});
+  	if (player === 1) {
+      canGoHome = points[19].count + points[20].count + points[21].count + points[22].count + points[23].count + points[24].count + points[25].count === 15;
+      barPieceSelected = numOnPoint === p1BarPoint;
+      numOnPoint = barPieceSelected ? 0 : numOnPoint;
+  		point1 = (numOnPoint + numD1);
+  		point2 = (numOnPoint + numD2);
+  	} else {
+      canGoHome = points[0].count + points[1].count + points[2].count + points[3].count + points[4].count + points[5].count + points[6].count === 15;
+      barPieceSelected = numOnPoint === p2BarPoint;
+      numOnPoint = barPieceSelected ? 25 : numOnPoint;
+  		point1 = (numOnPoint - numD1);
+  		point2 = (numOnPoint - numD2);
   	}
 
-  	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
-      canPlay = true;
-  		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
-  		$('#t' + point2).click(function () {
-  				pointClick(checkerID, document.getElementById('t' + point2), player);
-  			});
-  	}
-  }
+    resetActive();
 
-  if (canPlay) {
-    $(checker).attr('fill', activeCheckerFill);
-  }
-  else {
-      $(checker).attr('fill', noPlayCheckerFill);
-      setTimeout(function(){
-        $(checker).attr('fill', player === 1 ? p1CheckerFill : p2CheckerFill);
-      }, 500);
-  }
+    if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
+    {
+    	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].count === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
+        canPlay = true;
+    		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
+    		$('#t' + point1).click(function () {
+    				pointClick(checkerID, document.getElementById('t' + point1), player);
+    			});
+    	}
 
-  hotpoint1 = 't' + point1;
-  hotpoint2 = 't' + point2;
+    	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].count === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
+        canPlay = true;
+    		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
+    		$('#t' + point2).click(function () {
+    				pointClick(checkerID, document.getElementById('t' + point2), player);
+    			});
+    	}
+    }
+
+    if (canPlay) {
+      activeChecker = checker;
+      $(checker).attr('fill', activeCheckerFill);
+    }
+    else {
+        $(checker).attr('fill', noPlayCheckerFill);
+        setTimeout(function(){
+          $(checker).attr('fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+        }, 500);
+    }
+
+    hotpoint1 = 't' + point1;
+    hotpoint2 = 't' + point2;
+
+  }
 }
 
 function resetActive() {
   if (activeChecker) {
-    var activeCheckerPlayer = activeChecker.id.split("p")[1].split("c")[0];
-    $(activeChecker).attr('fill', activeCheckerPlayer == 1 ? p1CheckerFill : p2CheckerFill);
+    $(activeChecker).attr('fill', activePlayer == 1 ? p1CheckerFill : p2CheckerFill);
+      activeChecker = null;
     resetPoints();
   }
 }
@@ -294,14 +307,7 @@ function isNumber(n) {
 function pointClick(checkerID, point, player) {
   var checkerPoint = document.getElementById(checkerID).getAttribute('onPoint');
 	var res = moveChecker(checkerID, pointNumber(point), player);
-	resetPoints();
-	if (player == "1") {
-		$("#" + checkerID)
-			.attr("fill", p1CheckerFill);
-	} else {
-		$("#" + checkerID)
-			.attr("fill", p2CheckerFill);
-	}
+	resetActive();
   var distance = Math.abs(checkerPoint - pointNumber(point));
 	if (diceActive[0] && document.getElementById("d1value").value == distance) {
     updateDi(0);
