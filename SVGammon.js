@@ -7,6 +7,7 @@ var emptyDiceFill = 'white';
 var diceDotFill = 'black';
 var hotpoint1;
 var hotpoint2;
+var hotpoint3;
 var element;
 var initiated = false;
 var p1CheckerFill = 'black';
@@ -14,6 +15,7 @@ var p2CheckerFill = 'brown';
 var activeCheckerFill = 'purple';
 var noPlayCheckerFill = 'maroon';
 var pointActiveFill = 'green';
+var point2MoveActiveFill = 'pink';
 var edgeActiveFill = 'orange';
 var edgeInActiveFill = 'blue';
 var evenPointInactiveFill = 'white';
@@ -128,6 +130,7 @@ function populateBoard() {
   diceDoubles = [false, false];
   hotpoint1 = 0;
   hotpoint2 = 0;
+  hotpoint3 = 0;
 
   //Populate points list
 	for (i = 0; i <= 25; i++) {
@@ -183,7 +186,6 @@ function initiateChecker(player, checkerIndex, point){
   checker = 'p' + player + 'c' + checkerIndex;
   moveChecker(checker, point, player, true);
   if(!initiated){
-    console.log('setting checker click');
     $("#" + checker).click(function () {
         checkerClick(this);
       });
@@ -199,6 +201,7 @@ function checkerClick(checker) {
 	var player = parseFloat(checker.id.split("p")[1].split("c")[0]);
 	var point1;
 	var point2;
+  var point3;
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
@@ -213,7 +216,7 @@ function checkerClick(checker) {
     resetActive();
     return false;
   }
-  else if (activeChecker && activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2)) {
+  else if (activeChecker && activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2|| 't' + numOnPoint === hotpoint3)) {
     pointClick(activeChecker.id, document.getElementById('t' + numOnPoint), player);
   }
   else if (!activeChecker || activePlayer === player) {
@@ -223,12 +226,14 @@ function checkerClick(checker) {
       numOnPoint = barPieceSelected ? 0 : numOnPoint;
   		point1 = (numOnPoint + numD1);
   		point2 = (numOnPoint + numD2);
+      point3 = (numOnPoint + numD1 + numD2);
   	} else {
       canGoHome = points[0].count + points[1].count + points[2].count + points[3].count + points[4].count + points[5].count + points[6].count === 15;
       barPieceSelected = numOnPoint === p2BarPoint;
       numOnPoint = barPieceSelected ? 25 : numOnPoint;
   		point1 = (numOnPoint - numD1);
   		point2 = (numOnPoint - numD2);
+      point3 = (numOnPoint - numD1 - numD2);
   	}
 
     resetActive();
@@ -250,6 +255,15 @@ function checkerClick(checker) {
     		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
     		$('#t' + point2).click(function () {
     				pointClick(checkerID, document.getElementById('t' + point2), player);
+    			});
+    	}
+
+      if (diceActive[0] && diceActive[1] && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].count === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
+        canPlay = true;
+        hotpoint3 = 't' + point3;
+    		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
+    		$('#t' + point3).click(function () {
+    				pointClick(checkerID, document.getElementById('t' + point3), player);
     			});
     	}
     }
@@ -285,8 +299,10 @@ function resetActive() {
 function resetPoints() {
 	resetPoint(document.getElementById(hotpoint1));
 	resetPoint(document.getElementById(hotpoint2));
+	resetPoint(document.getElementById(hotpoint3));
   hotpoint1 = null;
   hotpoint2 = null;
+  hotpoint3 = null;
 }
 
 function resetPoint(point) {
@@ -322,7 +338,11 @@ function pointClick(checkerID, point, player) {
 	var res = moveChecker(checkerID, pointNumber(point), player);
 	resetActive();
   var distance = Math.abs(checkerPoint - pointNumber(point));
-	if (diceActive[0] && document.getElementById("d1value").value == distance) {
+  if (parseFloat(document.getElementById("d1value").value) + parseFloat(document.getElementById("d2value").value)  === distance) {
+    updateDi(0);
+    updateDi(1);
+  }
+	else if (diceActive[0] && document.getElementById("d1value").value == distance) {
     updateDi(0);
 	} else {
     updateDi(1);
