@@ -8,7 +8,7 @@ var hotpoint1 = 0;
 var hotpoint2 = 0;
 var element;
 var initiated = false;
-var p1CheckerFill = 'yellow';
+var p1CheckerFill = 'black';
 var p2CheckerFill = 'brown';
 var activeCheckerFill = 'purple';
 var noPlayCheckerFill = 'maroon';
@@ -154,10 +154,10 @@ function populateBoard() {
 
 
 	for (i = 1; i <= 5; i++) {
-    initiateChecker(2, i, 5);
+    initiateChecker(2, i, 6);
 	}
 	for (i = 6; i <= 8; i++) {
-    initiateChecker(2, i, 7);
+    initiateChecker(2, i, 8);
 	}
 	for (i = 9; i <= 13; i++) {
     initiateChecker(2, i, 13);
