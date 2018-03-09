@@ -435,6 +435,7 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 
   //Set the checker x and y coordinates and its new point number
   document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
+  document.getElementById(checkerID).setAttribute("collapsed", false);
 	document.getElementById(checkerID).setAttribute("cx", res[0]);
 	document.getElementById(checkerID).setAttribute("cy", res[1]);
 
@@ -592,9 +593,9 @@ function verifyCanPlay() {
     point2 = 25 - point2;
   }
 
-  // TODO: This is wrong? If the player is on the bar, they can only play if the point is empty or their own
+  // TODO: If the player is on the bar, they can only play if the point their own or has 0/1 pieces
   if (playerOnBar) {
-    canPlay = ((points[point1].player === activePlayer || points[point1].count === 0)) || ((points[point2].player === activePlayer || points[point2].count ===0));
+    canPlay = ((points[point1].player === activePlayer || points[point1].count <= 1)) || ((points[point2].player === activePlayer || points[point2].count <= 1));
   }
 
   return canPlay;
@@ -611,7 +612,6 @@ function collapseCheckers(pointNumber){
     var newY = pointNumber <= 12 ? curY / 2 : ((curY - 570) / 2) + 570;
 
     //Set the new y coordinate of the checker and it's "collapsed" value to true
-    // TODO: Where are we setting the "collapsed" value to false?
     $(this).attr('cy', newY);
     $(this).attr('collapsed', 'true');
   });
