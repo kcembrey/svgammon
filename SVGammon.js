@@ -232,6 +232,7 @@ function checkerClick(checker) {
   var barPieceSelected = false;
   var canPlay = false;
   var canGoHome = false;
+  var topChecker = findTopChecker(numOnPoint);
 
 
   //Clears selected checker if it is the active one
@@ -248,6 +249,11 @@ function checkerClick(checker) {
   //If a checker is not active and the selected checker belongs to the player, continue to check for available moves
   else if (!activeChecker || activePlayer === player) {
 
+    //Select the top checker on the point if this is not the top checker
+    if(topChecker != checker){
+      checkerClick(topChecker);
+      return false;
+    }
     //Set points and prerequisites for moves
   	if (player === 1) {
       canGoHome = points[19].count + points[20].count + points[21].count + points[22].count + points[23].count + points[24].count + points[25].count === 15;
@@ -615,4 +621,19 @@ function collapseCheckers(pointNumber){
     $(this).attr('cy', newY);
     $(this).attr('collapsed', 'true');
   });
+}
+
+//Find the top checker on the point
+function findTopChecker(pointNumber){
+  var selectedChecker;
+  //Find all checkers on this point
+  $("[onPoint=" + pointNumber +"]").each(function() {
+
+    //Update selectedChecker if it is null or the founch checker is above the selected checker
+    if (!selectedChecker || (pointNumber > 12 ? parseFloat($(this).attr('cy')) < parseFloat($(selectedChecker).attr('cy')) : parseFloat($(this).attr('cy')) > parseFloat($(selectedChecker).attr('cy')))) {
+      selectedChecker = this;
+    }
+  });
+
+  return selectedChecker;
 }
