@@ -162,7 +162,8 @@ function populateBoard() {
         player = 1;
         checkers = initiateCheckers(player,2);
         break;
-      case 6 || 13:
+      case 6:
+      case 13:
         player = 2;
         checkers = initiateCheckers(2,5);
         break;
@@ -170,7 +171,8 @@ function populateBoard() {
         player = 2;
         checkers = initiateCheckers(2,3);
         break;
-      case 12 || 19:
+      case 12:
+      case 19:
         player = 1;
         checkers = initiateCheckers(1,5);
         break;
@@ -187,7 +189,7 @@ function populateBoard() {
     }
 		points[i] = {
 			id: i,
-			count: 0,
+			count: checkers.length,
       checkers: checkers,
 			player: player
 		};
@@ -237,6 +239,8 @@ function populateBoard() {
   //Hide the dice
 	hideDice();
 
+  repopulateCheckers(points);
+
   //Set player label to the active player (1)
   document.getElementById('playerLabel').innerHTML = activePlayer;
 }
@@ -257,7 +261,7 @@ function initiateCheckers(player, countOfCheckers){
   var curCheckers = [];
   var svgns = 'http://www.w3.org/2000/svg';
 
-  for (var i = 1; i < countOfCheckers; i++) {
+  for (var i = 1; i <= countOfCheckers; i++) {
     checker = document.createElementNS(svgns, 'circle');
     checker.setAttributeNS(null, 'id', 'p' + player + 'c' + playerCheckerCount[player]);
     checker.setAttributeNS(null, 'r', '20');
@@ -265,6 +269,7 @@ function initiateCheckers(player, countOfCheckers){
     checker.setAttributeNS(null, 'stroke-width', '1');
     checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
     document.getElementById('svgObj').appendChild(checker);
+    checker.addEventListener('click', checkerClick);
     curCheckers.push(checker);
     playerCheckerCount[player]++;
   }
@@ -272,7 +277,8 @@ function initiateCheckers(player, countOfCheckers){
 }
 
 //Function when checker is clicked
-function checkerClick(checker) {
+function checkerClick() {
+  var checker = this;
 	var onPoint = checker.getAttribute("onPoint");
 	var d1Val = document.getElementById("d1value").value;
 	var d2Val = document.getElementById("d2value").value;
@@ -820,5 +826,31 @@ function guid() {
 
 //Re-Populates the board from points object
 function repopulateCheckers(points){
+  var res;
+  var point;
+  for (var pointIndex in points){
+    point = points[pointIndex];
+    //Reset count of checkers on point
+    point.count = 0;
 
+    //Place each checker in their respective location
+    placeCheckers(point);
+
+    //Adjust the checkers on the point
+    adjustCheckers(point.id);
+  }
+}
+
+function placeCheckers(point){
+
+  $(point.checkers).each(function(){
+    //Get the new x y coordinates of the checker
+    res = calcCheckerXY(point.id, point.player);
+
+    //Set the checker x and y coordinates and its new point number
+    $(this).attr('onPoint', point.id);
+    $(this).attr('collapsed', false);
+    $(this).attr('cx', res[0]);
+    $(this).attr('cy', res[1]);
+  });
 }
