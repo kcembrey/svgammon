@@ -195,7 +195,7 @@ function populateBoard() {
 	}
 
   //Populate bar point globals
-  for (i = 100; i <= barPoints[1]; i+= barpoints[2]) {
+  for (i = 100; i <= barPoints[1]; i+= barPoints[2]) {
     points[i] = {
       id: i,
       count: 0,
@@ -289,8 +289,8 @@ function checkerClick() {
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
-  var playerOnBar = barpoints[player];
-  var barPieceSelected = numOnPoint === barpoints[player];
+  var playerOnBar = barPoints[player];
+  var barPieceSelected = numOnPoint === barPoints[player];
   var canPlay = false;
   var canGoHome = false;
   var topChecker = findTopChecker(numOnPoint);
