@@ -24,10 +24,9 @@ var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
 var activeChecker;
 var activePlayer;
-var p1BarPoint = 200;
-var p2BarPoint = 100;
+var barPoints = [0,200,100];
 var multiplayerGameID;
-var playerCheckerCount = [0,0];
+var playerCheckerCount = [0,0,0];
 
 populateBoard();
 
@@ -196,7 +195,7 @@ function populateBoard() {
 	}
 
   //Populate bar point globals
-  for (i = 100; i <= p1BarPoint; i+= p2BarPoint) {
+  for (i = 100; i <= barPoints[1]; i+= barpoints[2]) {
     points[i] = {
       id: i,
       count: 0,
@@ -290,8 +289,8 @@ function checkerClick() {
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(d1Val);
 	var numD2 = parseFloat(d2Val);
-  var playerOnBar = player === 1 ? points[p1BarPoint].count !== 0 : points[p2BarPoint].count !== 0;
-  var barPieceSelected = false;
+  var playerOnBar = barpoints[player];
+  var barPieceSelected = numOnPoint === barpoints[player];
   var canPlay = false;
   var canGoHome = false;
   var topChecker = findTopChecker(numOnPoint);
@@ -319,14 +318,12 @@ function checkerClick() {
     //Set points and prerequisites for moves
   	if (player === 1) {
       canGoHome = points[19].count + points[20].count + points[21].count + points[22].count + points[23].count + points[24].count + points[25].count === 15;
-      barPieceSelected = numOnPoint === p1BarPoint;
       numOnPoint = barPieceSelected ? 0 : numOnPoint;
   		point1 = (numOnPoint + numD1);
   		point2 = (numOnPoint + numD2);
       point3 = (numOnPoint + numD1 + numD2);
   	} else {
       canGoHome = points[0].count + points[1].count + points[2].count + points[3].count + points[4].count + points[5].count + points[6].count === 15;
-      barPieceSelected = numOnPoint === p2BarPoint;
       numOnPoint = barPieceSelected ? 25 : numOnPoint;
   		point1 = (numOnPoint - numD1);
   		point2 = (numOnPoint - numD2);
@@ -524,10 +521,10 @@ function calcCheckerXY(pointNumber, player) {
 	var count;
 
   //If the new checker is hitting an opponents single checker, send them to the bar
-  if (pointNumber != p1BarPoint && pointNumber != p2BarPoint && points[pointNumber].player != 0 && points[pointNumber].player != player) {
+  if (pointNumber != barPoints[player] && points[pointNumber].player != 0 && points[pointNumber].player != player) {
 
     //Send opponent checker to bar
-    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), player == 2 ? p1BarPoint : p2BarPoint, points[pointNumber].player);
+    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), barPoints[player], points[pointNumber].player);
   }
 
   //Update the current point player
@@ -549,7 +546,7 @@ function calcCheckerXY(pointNumber, player) {
 	} else if (pointNumber <= 25) {
 		result[0] = 60 + ((pointNumber - 12) * 40);
 		result[1] = 550 - (count * 42) + 21;
-	} else if (pointNumber == p1BarPoint)  {
+	} else if (pointNumber == barPoints[1])  {
     result[0] = 300;
     result[1] = 550 - (count * 42) + 21;
   } else {
@@ -654,7 +651,7 @@ function showDice(canPlay, doubles) {
 //Verifies the player has an available move to play
 function verifyCanPlay() {
   var canPlay = true;
-  var playerOnBar = activePlayer === 1 ? points[p1BarPoint].count !== 0 : points[200].count !== 0;
+  var playerOnBar = points[barPoints[activePlayer]].count !== 0;
 
   //Get the numbers/locations of the current points
 	var point1 = parseFloat(document.getElementById("d1value").value);
