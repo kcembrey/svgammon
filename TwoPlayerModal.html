@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html margin="0" height="100%" width="100%">
+<head>
+</head>
+<body margin="0" height="100%" width="100%">
+<div>
+  <input id='player1'
+</div>
+<input id="d1value" type="hidden" value="0"/>
+<input id="d2value" type="hidden" value="0"/>
+<input id="button1" type="button" value="Reset Board"
+            onclick="resetBoard()"/>
+<input id="button2" type="button" value="Roll Dice"
+            onclick="rollDice(1,6)"/>
+<input id="button3" type="button" value="2 Player Game"
+            onclick="initiate2Player()"/>
+<span><label>Player </label><label id="playerLabel"></label></span>
+
+
+<script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyAqA6Y5je6DNj_fY22bjhFWG_ufzuha7_k",
+    authDomain: "svgammon-multiplayer.firebaseapp.com",
+    databaseURL: "https://svgammon-multiplayer.firebaseio.com",
+    projectId: "svgammon-multiplayer",
+    storageBucket: "",
+    messagingSenderId: "684978248262"
+  };
+  firebase.initializeApp(config);
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="svgammon.js"></script>
+</body>
+</html>

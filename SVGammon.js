@@ -27,6 +27,7 @@ var activePlayer;
 var p1BarPoint = 200;
 var p2BarPoint = 100;
 var multiplayerGameID;
+var playerCheckerCount = [0,0];
 
 populateBoard();
 
@@ -47,22 +48,22 @@ function initiate(){
   var svgns = 'http://www.w3.org/2000/svg';
   var element;
 
-  //Create all checker SVG objects
-  for (i = 1; i <= 15; i++) {
-    checker = document.createElementNS(svgns, 'circle');
-    checker.setAttributeNS(null, 'id', 'p' + player + 'c' + i);
-    checker.setAttributeNS(null, 'r', '20');
-    checker.setAttributeNS(null, 'stroke', 'black');
-    checker.setAttributeNS(null, 'stroke-width', '1');
-    checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
-    document.getElementById('svgObj').appendChild(checker);
-
-    //Loop through again for player 2
-    if (player === 1 && i === 15) {
-      i = 0;
-      player = 2;
-    }
-  }
+  // //Create all checker SVG objects
+  // for (i = 1; i <= 15; i++) {
+  //   checker = document.createElementNS(svgns, 'circle');
+  //   checker.setAttributeNS(null, 'id', 'p' + player + 'c' + i);
+  //   checker.setAttributeNS(null, 'r', '20');
+  //   checker.setAttributeNS(null, 'stroke', 'black');
+  //   checker.setAttributeNS(null, 'stroke-width', '1');
+  //   checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+  //   document.getElementById('svgObj').appendChild(checker);
+  //
+  //   //Loop through again for player 2
+  //   if (player === 1 && i === 15) {
+  //     i = 0;
+  //     player = 2;
+  //   }
+  // }
 
   //Create Dice SVG objects
   for (i = 1; i <= 7; i++) {
@@ -137,6 +138,8 @@ function resetBoard() {
 
 //Populate the board and reset game
 function populateBoard() {
+  var checkers;
+  var player;
 
   if (!initiated) {
     initiate();
@@ -154,10 +157,39 @@ function populateBoard() {
 
   //Populate points globals
 	for (i = 0; i <= 25; i++) {
+    switch (i) {
+      case 1:
+        player = 1;
+        checkers = initiateCheckers(player,2);
+        break;
+      case 6 || 13:
+        player = 2;
+        checkers = initiateCheckers(2,5);
+        break;
+      case 8:
+        player = 2;
+        checkers = initiateCheckers(2,3);
+        break;
+      case 12 || 19:
+        player = 1;
+        checkers = initiateCheckers(1,5);
+        break;
+      case 17:
+        player = 1;
+        checkers = initiateCheckers(1,3);
+        break;
+      case 24:
+        player = 2;
+        checkers = initiateCheckers(2,2);
+        break;
+      default:
+        checkers = [];
+    }
 		points[i] = {
 			id: i,
 			count: 0,
-			player: 0
+      checkers: checkers,
+			player: player
 		};
 	}
 
@@ -166,37 +198,38 @@ function populateBoard() {
     points[i] = {
       id: i,
       count: 0,
+      checkers: [],
       player: 0
     };
   }
 
-  //Move checkers to their starting locations - Player 1
-	for (i = 1; i <= 2; i++) {
-    initiateChecker(1, i, 1);
-	}
-	for (i = 3; i <= 7; i++) {
-    initiateChecker(1, i, 12);
-	}
-	for (i = 8; i <= 10; i++) {
-    initiateChecker(1, i, 17);
-	}
-	for (i = 11; i <= 15; i++) {
-    initiateChecker(1, i, 19);
-	}
-
-  //Move checkers to their starting locations - Player 2
-	for (i = 1; i <= 5; i++) {
-    initiateChecker(2, i, 6);
-	}
-	for (i = 6; i <= 8; i++) {
-    initiateChecker(2, i, 8);
-	}
-	for (i = 9; i <= 13; i++) {
-    initiateChecker(2, i, 13);
-	}
-	for (i = 14; i <= 15; i++) {
-    initiateChecker(2, i, 24);
-	}
+  // //Move checkers to their starting locations - Player 1
+	// for (i = 1; i <= 2; i++) {
+  //   initiateChecker(1, i, 1);
+	// }
+	// for (i = 3; i <= 7; i++) {
+  //   initiateChecker(1, i, 12);
+	// }
+	// for (i = 8; i <= 10; i++) {
+  //   initiateChecker(1, i, 17);
+	// }
+	// for (i = 11; i <= 15; i++) {
+  //   initiateChecker(1, i, 19);
+	// }
+  //
+  // //Move checkers to their starting locations - Player 2
+	// for (i = 1; i <= 5; i++) {
+  //   initiateChecker(2, i, 6);
+	// }
+	// for (i = 6; i <= 8; i++) {
+  //   initiateChecker(2, i, 8);
+	// }
+	// for (i = 9; i <= 13; i++) {
+  //   initiateChecker(2, i, 13);
+	// }
+	// for (i = 14; i <= 15; i++) {
+  //   initiateChecker(2, i, 24);
+	// }
 
   //Board has been initiated
   initiated = true;
@@ -217,6 +250,25 @@ function initiateChecker(player, checkerIndex, point){
         checkerClick(this);
       });
   }
+}
+
+function initiateCheckers(player, countOfCheckers){
+  var checker;
+  var curCheckers = [];
+  var svgns = 'http://www.w3.org/2000/svg';
+
+  for (var i = 1; i < countOfCheckers; i++) {
+    checker = document.createElementNS(svgns, 'circle');
+    checker.setAttributeNS(null, 'id', 'p' + player + 'c' + playerCheckerCount[player]);
+    checker.setAttributeNS(null, 'r', '20');
+    checker.setAttributeNS(null, 'stroke', 'black');
+    checker.setAttributeNS(null, 'stroke-width', '1');
+    checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+    document.getElementById('svgObj').appendChild(checker);
+    curCheckers.push(checker);
+    playerCheckerCount[player]++;
+  }
+  return curCheckers;
 }
 
 //Function when checker is clicked
@@ -763,4 +815,10 @@ function guid() {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+}
+
+
+//Re-Populates the board from points object
+function repopulateCheckers(points){
+
 }
