@@ -10,6 +10,8 @@ var hotpoint2;
 var hotpoint3;
 var element;
 var initiated = false;
+var player1Name = 1;
+var player2Name = 2;
 var p1CheckerFill = 'black';
 var p2CheckerFill = 'brown';
 var activeCheckerFill = 'purple';
@@ -24,6 +26,7 @@ var activeChecker;
 var activePlayer;
 var p1BarPoint = 200;
 var p2BarPoint = 100;
+var multiplayerGameID;
 
 populateBoard();
 
@@ -142,6 +145,7 @@ function populateBoard() {
   //Reset global variables
   activePlayer = 1;
   activeChecker = null;
+  multiplayerGameID = null;
   diceActive = [false, false];
   diceDoubles = [false, false];
   hotpoint1 = 0;
@@ -428,26 +432,31 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
   //Gets the checker's current point location
   var curPoint = document.getElementById(checkerID).getAttribute('onPoint');
 
-  //Only adjust the original point's count and player if the board is not being cleared and the checker is on a current point
-  if (!clearBoard && curPoint) {
-      points[curPoint].count--;
-    if (points[curPoint].count === 0) {
-      points[curPoint].player = 0;
+  if (curPoint !== pointNumber) {
+
+    //Only adjust the original point's count and player if the board is not being cleared and the checker is on a current point
+    if (!clearBoard && curPoint) {
+        points[curPoint].count--;
+      if (points[curPoint].count === 0) {
+        points[curPoint].player = 0;
+      }
     }
-  }
 
-  //Get the new x y coordinates of the checker
-  res = calcCheckerXY(pointNumber, player);
+    //Get the new x y coordinates of the checker
+    res = calcCheckerXY(pointNumber, player);
 
-  //Set the checker x and y coordinates and its new point number
-  document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
-  document.getElementById(checkerID).setAttribute("collapsed", false);
-	document.getElementById(checkerID).setAttribute("cx", res[0]);
-	document.getElementById(checkerID).setAttribute("cy", res[1]);
+    //Set the checker x and y coordinates and its new point number
+    document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
+    document.getElementById(checkerID).setAttribute("collapsed", false);
+  	document.getElementById(checkerID).setAttribute("cx", res[0]);
+  	document.getElementById(checkerID).setAttribute("cy", res[1]);
 
-  //Collapse the checkers on the current point if there are more than 5 total
-  if (points[pointNumber].count > 5) {
-    collapseCheckers(pointNumber);
+    //Adjust the checkers on each point
+    adjustCheckers(pointNumber);
+    adjustCheckers(curPoint);
+
+    checkForWin();
+
   }
 }
 
@@ -608,19 +617,32 @@ function verifyCanPlay() {
 }
 
 //Collapses the checkers on a point
-function collapseCheckers(pointNumber){
-
+function adjustCheckers(pointNumber){
+  //Collapse the checkers on the current point if there are more than 5 total
+  if (pointNumber && points[pointNumber].count > 5) {
   //Find all non-collapsed checkers on this point
-  $("[onPoint=" + pointNumber +"][collapsed!='true']").each(function() {
+    $("[onPoint=" + pointNumber +"][collapsed!='true']").each(function() {
+      //Calculate the new y coordinate of the checker
+      var curY = parseFloat($(this).attr('cy'));
+      var newY = pointNumber <= 12 ? curY / 2 : ((curY - 570) / 2) + 570;
 
-    //Calculate the new y coordinate of the checker
-    var curY = parseFloat($(this).attr('cy'));
-    var newY = pointNumber <= 12 ? curY / 2 : ((curY - 570) / 2) + 570;
+      //Set the new y coordinate of the checker and it's "collapsed" value to true
+      $(this).attr('cy', newY);
+      $(this).attr('collapsed', 'true');
+    });
+  }
+  else if (pointNumber) {
+    //Find all collapsed checkers on this point
+      $("[onPoint=" + pointNumber +"][collapsed='true']").each(function() {
+        //Calculate the new y coordinate of the checker
+        var curY = parseFloat($(this).attr('cy'));
+        var newY = pointNumber <= 12 ? curY * 2 : ((curY - 570) * 2) + 570;
 
-    //Set the new y coordinate of the checker and it's "collapsed" value to true
-    $(this).attr('cy', newY);
-    $(this).attr('collapsed', 'true');
-  });
+        //Set the new y coordinate of the checker and it's "collapsed" value to true
+        $(this).attr('cy', newY);
+        $(this).attr('collapsed', 'true');
+      });
+  }
 }
 
 //Find the top checker on the point
@@ -628,12 +650,117 @@ function findTopChecker(pointNumber){
   var selectedChecker;
   //Find all checkers on this point
   $("[onPoint=" + pointNumber +"]").each(function() {
-
-    //Update selectedChecker if it is null or the founch checker is above the selected checker
+    //Update selectedChecker if it is null or the found checker is above the selected checker
     if (!selectedChecker || (pointNumber > 12 ? parseFloat($(this).attr('cy')) < parseFloat($(selectedChecker).attr('cy')) : parseFloat($(this).attr('cy')) > parseFloat($(selectedChecker).attr('cy')))) {
       selectedChecker = this;
     }
   });
 
   return selectedChecker;
+}
+
+//Check if the player has won the game
+function checkForWin(){
+  var wonGame = activePlayer === 1 ? points[25].count === 15 : point[0].count === 15;
+  if (wonGame) {
+    document.getElementById('playerLabel').innerHTML = activePlayer + ' WON THE GAME!!!';
+    hideDice();
+  }
+  return wonGame;
+}
+
+//Open the modal window to start a 2 player game
+function initiate2Player(){
+  var modal = document.getElementById('2PlayerModal');
+  modal.style.display = 'block';
+}
+
+//Retrieve player names and setup a 2 player game
+function submitPlayerNames(){
+  var modal = document.getElementById('2PlayerModal');
+  modal.style.display = 'none';
+  var player1Name = document.getElementById('Player1Input').value;
+  var player2Name = document.getElementById('Player2Input').value;
+  get2PlayerGameData(player1Name, player2Name);
+}
+
+//Get unique game id of 2 player game
+function get2PlayerGameData(player1Name, player2Name){
+  var gameID;
+  var gameData;
+  var onlineGameData = $.getJSON('http://blog.recroomrecords.com/code/activegames.json');
+  for (var activeGame in onlineGameData.ActiveGames){
+    if (activeGame.playerOne === player1Name) {
+      gameID = activeGame.uniqueID;
+    }
+  }
+  if (!gameID) {
+    gameID = guid();
+    gameData = {
+      'uniqueID': gameID,
+      'player1':player1Name,
+      'player2':player2Name,
+      'activePlayer':1,
+      'player1Checkers':{1:2,12:5,17:3,19:5},
+      'player2Checkers':{6:5,8:3,13:5,24:2}
+    };
+  }
+
+  multiplayerGameID = gameID;
+  populate2PlayerGame(gameData);
+}
+
+function populate2PlayerGame(gameData){
+  var checkerNumber = 1;
+  var pointData;
+  var pointNumber;
+  var i;
+
+  pointData = gameData.player1Checkers;
+  for (pointNumber in pointData){
+    for (i = 1; i <= pointData[pointNumber]; i++) {
+      moveChecker('p1c' + checkerNumber, pointNumber, 1, false);
+      checkerNumber++;
+    }
+  }
+
+  checkerNumber = 1;
+  pointData = gameData.player2Checkers;
+  for (pointNumber in pointData){
+    for (i = 1; i <= pointData[pointNumber]; i++) {
+      moveChecker('p2c' + checkerNumber, pointNumber, 1, false);
+      checkerNumber++;
+    }
+  }
+
+  player1Name = gameData.player1;
+  player2Name = gameData.player2;
+  activePlayer = gameData.activePlayer;
+}
+
+function update2PlayerGameData(){
+
+  var gameData = {
+    multiplayerGameID: {
+    'player1':player1Name,
+    'player2':player2Name,
+    'activePlayer':activePlayer,
+    'points':points
+  }};
+
+  var onlineGameData = $.getJSON('http://blog.recroomrecords.com/code/activegames.json');
+  for (var activeGame in onlineGameData.ActiveGames){
+    if (activeGame === multiplayerGameID) {
+      onlineGameData.ActiveGames[multiplayerGameID] = gameData;
+    }
+  }
+
+  //write the game data to the server
+}
+
+function guid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
