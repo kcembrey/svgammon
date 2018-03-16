@@ -12,8 +12,7 @@ var element;
 var initiated = false;
 var player1Name = 1;
 var player2Name = 2;
-var p1CheckerFill = 'black';
-var p2CheckerFill = 'brown';
+var checkerFill = ['','black','brown'];
 var activeCheckerFill = 'purple';
 var noPlayCheckerFill = 'maroon';
 var pointActiveFill = 'green';
@@ -27,6 +26,7 @@ var activePlayer;
 var barPoints = [0,200,100];
 var multiplayerGameID;
 var playerCheckerCount = [0,0,0];
+var diceValue = [0,0];
 
 populateBoard();
 
@@ -164,24 +164,24 @@ function populateBoard() {
       case 6:
       case 13:
         player = 2;
-        checkers = initiateCheckers(2,5);
+        checkers = initiateCheckers(player,5);
         break;
       case 8:
         player = 2;
-        checkers = initiateCheckers(2,3);
+        checkers = initiateCheckers(player,3);
         break;
       case 12:
       case 19:
         player = 1;
-        checkers = initiateCheckers(1,5);
+        checkers = initiateCheckers(player,5);
         break;
       case 17:
         player = 1;
-        checkers = initiateCheckers(1,3);
+        checkers = initiateCheckers(player,3);
         break;
       case 24:
         player = 2;
-        checkers = initiateCheckers(2,2);
+        checkers = initiateCheckers(player,2);
         break;
       default:
         checkers = [];
@@ -266,7 +266,7 @@ function initiateCheckers(player, countOfCheckers){
     checker.setAttributeNS(null, 'r', '20');
     checker.setAttributeNS(null, 'stroke', 'black');
     checker.setAttributeNS(null, 'stroke-width', '1');
-    checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+    checker.setAttributeNS(null, 'fill', checkerFill[player]);
     document.getElementById('svgObj').appendChild(checker);
     checker.addEventListener('click', checkerClick);
     curCheckers.push(checker);
@@ -279,16 +279,14 @@ function initiateCheckers(player, countOfCheckers){
 function checkerClick() {
   var checker = this;
 	var onPoint = checker.getAttribute("onPoint");
-	var d1Val = document.getElementById("d1value").value;
-	var d2Val = document.getElementById("d2value").value;
 	var checkerID = checker.id;
 	var player = parseFloat(checker.id.split("p")[1].split("c")[0]);
 	var point1;
 	var point2;
   var point3;
 	var numOnPoint = parseFloat(onPoint);
-	var numD1 = parseFloat(d1Val);
-	var numD2 = parseFloat(d2Val);
+	var numD1 = parseFloat(diceValue[0]);
+	var numD2 = parseFloat(diceValue[1]);
   var playerOnBar = barPoints[player];
   var barPieceSelected = numOnPoint === barPoints[player];
   var canPlay = false;
@@ -377,7 +375,7 @@ function checkerClick() {
     else {
         $(checker).attr('fill', noPlayCheckerFill);
         setTimeout(function(){
-          $(checker).attr('fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+          $(checker).attr('fill', checkerFill[player]);
         }, 500);
     }
   }
@@ -386,7 +384,7 @@ function checkerClick() {
   else {
         $(checker).attr('fill', noPlayCheckerFill);
         setTimeout(function(){
-          $(checker).attr('fill', player === 1 ? p1CheckerFill : p2CheckerFill);
+          $(checker).attr('fill', checkerFill[player]);
         }, 500);
   }
 }
@@ -394,7 +392,7 @@ function checkerClick() {
 //Reset all active checkers and points
 function resetActive() {
   if (activeChecker) {
-    $(activeChecker).attr('fill', activePlayer == 1 ? p1CheckerFill : p2CheckerFill);
+    $(activeChecker).attr('fill', checkerFill[activePlayer]);
       activeChecker = null;
     resetPoints();
   }
@@ -453,13 +451,13 @@ function pointClick(checkerID, point, player) {
   var distance = Math.abs(checkerPoint - pointNumber(point));
 
   //Point selected uses both dice values
-  if (parseFloat(document.getElementById("d1value").value) + parseFloat(document.getElementById("d2value").value)  === distance) {
+  if (parseFloat(diceValue[0]) + parseFloat(diceValue[1])  === distance) {
     updateDi(0);
     updateDi(1);
   }
 
   //Point selected uses first di value
-	else if (diceActive[0] && document.getElementById("d1value").value == distance) {
+	else if (diceActive[0] && diceValue[0] == distance) {
     updateDi(0);
 
   //Point selected uses second di value
@@ -565,28 +563,24 @@ function rollDice() {
   var canPlay;
 
   //Get random numbers for the dice
-	var value1 = Math.floor((Math.random() * 6) + 1);
-	var value2 = Math.floor((Math.random() * 6) + 1);
+	diceValue[0] = Math.floor((Math.random() * 6) + 1);
+	diceValue[1] = Math.floor((Math.random() * 6) + 1);
 
   resetActive();
 	clearDice();
 
-  //Set the new values of the dice
-	document.getElementById("d1value").value = value1;
-	document.getElementById("d2value").value = value2;
-
   //Populate the dots on the dice
-	populateDi(0, value1);
-	populateDi(1, value2);
+	populateDi(0, diceValue[0]);
+	populateDi(1, diceValue[1]);
 
   //Verify there is a play with the new dice values
   canPlay = verifyCanPlay();
 
   //Show the dice if there is a play
-	showDice(canPlay, value1 === value2);
+	showDice(canPlay, diceValue[0] === diceValue[1]);
 
   //Set the dice active if there is a play
-	diceActive = [canPlay,canPlay];
+	diceActive = [canPlay, canPlay];
 }
 
 //Populates/shows the relevant dots on a di
@@ -654,8 +648,8 @@ function verifyCanPlay() {
   var playerOnBar = points[barPoints[activePlayer]].count !== 0;
 
   //Get the numbers/locations of the current points
-	var point1 = parseFloat(document.getElementById("d1value").value);
-	var point2 = parseFloat(document.getElementById("d2value").value);
+	var point1 = diceValue[0];
+	var point2 = diceValue[1];
 
   //Player 2 needs their location relative to their home point (Player 1's home point is 0)
   if (activePlayer === 2) {
@@ -663,7 +657,7 @@ function verifyCanPlay() {
     point2 = 25 - point2;
   }
 
-  // TODO: If the player is on the bar, they can only play if the point their own or has 0/1 pieces
+  // TODO: If the player is on the bar, they can only play if the point is their own or has 0/1 pieces
   if (playerOnBar) {
     canPlay = ((points[point1].player === activePlayer || points[point1].count <= 1)) || ((points[point2].player === activePlayer || points[point2].count <= 1));
   }
