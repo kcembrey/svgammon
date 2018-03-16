@@ -27,6 +27,8 @@ var barPoints = [0,200,100];
 var multiplayerGameID;
 var playerCheckerCount = [0,0,0];
 var diceValue = [0,0];
+var channel;
+var firebaseData;
 
 populateBoard();
 
@@ -681,101 +683,7 @@ function checkForWin(){
   return wonGame;
 }
 
-//Open the modal window to start a 2 player game
-function initiate2Player(){
-  var modal = document.getElementById('2PlayerModal');
-  modal.style.display = 'block';
-}
 
-//Retrieve player names and setup a 2 player game
-function submitPlayerNames(){
-  var modal = document.getElementById('2PlayerModal');
-  modal.style.display = 'none';
-  var player1Name = document.getElementById('Player1Input').value;
-  var player2Name = document.getElementById('Player2Input').value;
-  get2PlayerGameData(player1Name, player2Name);
-}
-
-//Get unique game id of 2 player game
-function get2PlayerGameData(player1Name, player2Name){
-  var gameID;
-  var gameData;
-  var onlineGameData = $.getJSON('http://blog.recroomrecords.com/code/activegames.json');
-  for (var activeGame in onlineGameData.ActiveGames){
-    if (activeGame.playerOne === player1Name) {
-      gameID = activeGame.uniqueID;
-    }
-  }
-  if (!gameID) {
-    gameID = guid();
-    gameData = {
-      'uniqueID': gameID,
-      'player1':player1Name,
-      'player2':player2Name,
-      'activePlayer':1,
-      'player1Checkers':{1:2,12:5,17:3,19:5},
-      'player2Checkers':{6:5,8:3,13:5,24:2}
-    };
-  }
-
-  multiplayerGameID = gameID;
-  populate2PlayerGame(gameData);
-}
-
-function populate2PlayerGame(gameData){
-  var checkerNumber = 1;
-  var pointData;
-  var pointNumber;
-  var i;
-
-  pointData = gameData.player1Checkers;
-  for (pointNumber in pointData){
-    for (i = 1; i <= pointData[pointNumber]; i++) {
-      moveChecker('p1c' + checkerNumber, pointNumber, 1, false);
-      checkerNumber++;
-    }
-  }
-
-  checkerNumber = 1;
-  pointData = gameData.player2Checkers;
-  for (pointNumber in pointData){
-    for (i = 1; i <= pointData[pointNumber]; i++) {
-      moveChecker('p2c' + checkerNumber, pointNumber, 1, false);
-      checkerNumber++;
-    }
-  }
-
-  player1Name = gameData.player1;
-  player2Name = gameData.player2;
-  activePlayer = gameData.activePlayer;
-}
-
-function update2PlayerGameData(){
-
-  var gameData = {
-    multiplayerGameID: {
-    'player1':player1Name,
-    'player2':player2Name,
-    'activePlayer':activePlayer,
-    'points':points
-  }};
-
-  var onlineGameData = $.getJSON('http://blog.recroomrecords.com/code/activegames.json');
-  for (var activeGame in onlineGameData.ActiveGames){
-    if (activeGame === multiplayerGameID) {
-      onlineGameData.ActiveGames[multiplayerGameID] = gameData;
-    }
-  }
-
-  //write the game data to the server
-}
-
-function guid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
 
 
 //Re-Populates the board from points object
@@ -835,4 +743,99 @@ function calcCheckerXY(pointNumber, count, player) {
 	}
 
 	return result;
+}
+
+
+//Open the modal window to start a 2 player game
+function initiate2Player(){
+  var modal = document.getElementById('2PlayerModal');
+  modal.style.display = 'block';
+}
+
+//Retrieve player names and setup a 2 player game
+function submitPlayerNames(){
+  var modal = document.getElementById('2PlayerModal');
+  modal.style.display = 'none';
+  var player1Name = document.getElementById('Player1Input').value;
+  var player2Name = document.getElementById('Player2Input').value;
+  firebaseData = firebase.database();
+  get2PlayerGameData(player1Name, player2Name);
+}
+
+//Get unique game id of 2 player game
+function get2PlayerGameData(player1Name, player2Name){
+  var gameID;
+  var gameData;
+
+  // setup a database reference at path /channels/channelId
+  channel = firebaseData.ref('svgammon-multiplayer');
+
+  for (var activeGame in channel){
+    if (activeGame.player1 === player1Name || activeGame.player2 === player1Name) {
+      gameData = activeGame;
+      gameID = activeGame.id;
+    }
+  }
+  if (!gameData) {
+    gameID = guid();
+    gameData = { gameID:{
+      'player1':player1Name,
+      'player2':player2Name,
+      'activePlayer':1,
+      'points':points
+    }};
+  }
+
+  multiplayerGameID = gameID;
+  player1Name = gameData.gameID.player1;
+  player2Name = gameData.gameID.player2;
+  activePlayer = gameData.gameID.activePlayer;
+  points = gameData.gameID.points;
+  update2PlayerGameData();
+  repopulateCheckers(points);
+}
+
+function update2PlayerGameData(){
+    //write the game data to the server
+  firebaseData.ref('svgammon-multiplayer/' + multiplayerGameID).set({
+    'activePlayer':activePlayer,
+    'player1':player1Name,
+    'player2':player2Name,
+    'points':points
+  });
+}
+
+function guid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+
+
+/////////////////////////////FireBase Methods/////////////////
+function onMessage(){
+
+}
+
+function openChannel() {
+  // sign into Firebase with the token passed from the server
+  firebase.auth().signInWithCustomToken(token).catch(function(error) {
+    console.log('Login Failed!', error.code);
+    console.log('Error message: ', error.message);
+  });
+
+  // setup a database reference at path /channels/channelId
+  channel = firebase.database().ref('channels/' + channelId);
+  // add a listener to the path that fires any time the value of the data changes
+  channel.on('value', function(data) {
+    onMessage(data.val());
+  });
+  onOpened();
+  // let the server know that the channel is open
+}
+
+function onOpened() {
+  $.post('/opened');
 }
