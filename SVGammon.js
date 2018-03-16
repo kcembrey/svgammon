@@ -184,6 +184,7 @@ function populateBoard() {
         checkers = initiateCheckers(player,2);
         break;
       default:
+        player = 0;
         checkers = [];
     }
 		points[i] = {
@@ -287,7 +288,7 @@ function checkerClick() {
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(diceValue[0]);
 	var numD2 = parseFloat(diceValue[1]);
-  var playerOnBar = barPoints[player];
+  var playerOnBar = points[barPoints[player]].count > 0;
   var barPieceSelected = numOnPoint === barPoints[player];
   var canPlay = false;
   var canGoHome = false;
@@ -522,7 +523,7 @@ function calcCheckerXY(pointNumber, player) {
   if (pointNumber != barPoints[player] && points[pointNumber].player != 0 && points[pointNumber].player != player) {
 
     //Send opponent checker to bar
-    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), barPoints[player], points[pointNumber].player);
+    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), barPoints[player === 1 ? 2 : 1], points[pointNumber].player);
   }
 
   //Update the current point player
@@ -710,7 +711,7 @@ function findTopChecker(pointNumber){
 
 //Check if the player has won the game
 function checkForWin(){
-  var wonGame = activePlayer === 1 ? points[25].count === 15 : point[0].count === 15;
+  var wonGame = activePlayer === 1 ? points[25].count === 15 : points[0].count === 15;
   if (wonGame) {
     document.getElementById('playerLabel').innerHTML = activePlayer + ' WON THE GAME!!!';
     hideDice();
