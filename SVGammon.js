@@ -475,6 +475,15 @@ function pointClick(checkerID, point, player) {
 	return true;
 }
 
+//Removes a checker from an array
+function removeCheckerFromArray(inputArray, checker){
+  for (var i = 0; i < inputArray.length; i++) {
+    if (inputArray[i] == checker){
+      inputArray.splice(i, 1);
+    }
+  }
+}
+
 //Moves a checker without specifying a clear board
 function moveChecker(checkerID, pointNumber, player){
   moveChecker(checkerID, pointNumber, player, false);
@@ -484,80 +493,36 @@ function moveChecker(checkerID, pointNumber, player){
 function moveChecker(checkerID, pointNumber, player, clearBoard) {
 
   //Gets the checker's current point location
-  var curPoint = document.getElementById(checkerID).getAttribute('onPoint');
+  var curChecker = document.getElementById(checkerID);
+  var curPoint = curChecker.getAttribute('onPoint');
 
   if (curPoint !== pointNumber) {
 
     //Only adjust the original point's count and player if the board is not being cleared and the checker is on a current point
     if (!clearBoard && curPoint) {
-        points[curPoint].count--;
+      removeCheckerFromArray(points[curPoint].checkers, curChecker);
+      points[curPoint].count--;
       if (points[curPoint].count === 0) {
         points[curPoint].player = 0;
       }
     }
 
-    //Get the new x y coordinates of the checker
-    res = calcCheckerXY(pointNumber, player);
+    //If the new checker is hitting an opponents single checker, send them to the bar
+    if (pointNumber != barPoints[player] && points[pointNumber].player != 0 && points[pointNumber].player != player) {
 
-    //Set the checker x and y coordinates and its new point number
-    document.getElementById(checkerID).setAttribute("onPoint", pointNumber);
-    document.getElementById(checkerID).setAttribute("collapsed", false);
-  	document.getElementById(checkerID).setAttribute("cx", res[0]);
-  	document.getElementById(checkerID).setAttribute("cy", res[1]);
+      //Send opponent checker to bar
+      moveChecker($('[onPoint=' + pointNumber +']').attr('id'), barPoints[player === 1 ? 2 : 1], points[pointNumber].player);
+    }
 
-    //Adjust the checkers on each point
-    adjustCheckers(pointNumber);
-    adjustCheckers(curPoint);
+    points[pointNumber].count++;
+    point[pointNumber].player = player;
 
     checkForWin();
-
+    repopulateCheckers(points);
   }
 }
 
-//Calculates the new x and y coordinates of where to place a checker on a point
-function calcCheckerXY(pointNumber, player) {
-	var result = [];
-	var count;
 
-  //If the new checker is hitting an opponents single checker, send them to the bar
-  if (pointNumber != barPoints[player] && points[pointNumber].player != 0 && points[pointNumber].player != player) {
-
-    //Send opponent checker to bar
-    moveChecker($('[onPoint=' + pointNumber +']').attr('id'), barPoints[player === 1 ? 2 : 1], points[pointNumber].player);
-  }
-
-  //Update the current point player
-  points[pointNumber].player = player;
-
-  //Update the count of checkers on the current point
-  count = points[pointNumber].count;
-
-  //Calculate the new x and y coordinates for the checker
-  if (pointNumber <= 6) {
-		result[0] = 580 - (pointNumber * 40);
-		result[1] = (count * 42) + 21;
-	} else if (pointNumber <= 12) {
-		result[0] = 540 - (pointNumber * 40);
-		result[1] = (count * 42) + 21;
-	} else if (pointNumber <= 18) {
-		result[0] = 20 + ((pointNumber - 12) * 40);
-		result[1] = 550 - (count * 42) + 21;
-	} else if (pointNumber <= 25) {
-		result[0] = 60 + ((pointNumber - 12) * 40);
-		result[1] = 550 - (count * 42) + 21;
-	} else if (pointNumber == barPoints[1])  {
-    result[0] = 300;
-    result[1] = 550 - (count * 42) + 21;
-  } else {
-		result[0] = 300;
-		result[1] = (count * 42) + 21;
-	}
-
-  //Add one to the count of checkers on this point
-	points[pointNumber].count++;
-
-	return result;
-}
 
 //Rolls the dice (Roll Dice button)
 function rollDice() {
@@ -818,7 +783,6 @@ function guid() {
 
 //Re-Populates the board from points object
 function repopulateCheckers(points){
-  var res;
   var point;
   for (var pointIndex in points){
     point = points[pointIndex];
@@ -834,15 +798,46 @@ function repopulateCheckers(points){
 }
 
 function placeCheckers(point){
-
+  var res;
+  var i = 0;
   $(point.checkers).each(function(){
     //Get the new x y coordinates of the checker
-    res = calcCheckerXY(point.id, point.player);
+    res = calcCheckerXY(point.id, i,  point.player);
 
     //Set the checker x and y coordinates and its new point number
     $(this).attr('onPoint', point.id);
     $(this).attr('collapsed', false);
     $(this).attr('cx', res[0]);
     $(this).attr('cy', res[1]);
+
+    i++;
   });
+}
+
+//Calculates the new x and y coordinates of where to place a checker on a point
+function calcCheckerXY(pointNumber, count, player) {
+	var result = [];
+
+  //Calculate the new x and y coordinates for the checker
+  if (pointNumber <= 6) {
+		result[0] = 580 - (pointNumber * 40);
+		result[1] = (count * 42) + 21;
+	} else if (pointNumber <= 12) {
+		result[0] = 540 - (pointNumber * 40);
+		result[1] = (count * 42) + 21;
+	} else if (pointNumber <= 18) {
+		result[0] = 20 + ((pointNumber - 12) * 40);
+		result[1] = 550 - (count * 42) + 21;
+	} else if (pointNumber <= 25) {
+		result[0] = 60 + ((pointNumber - 12) * 40);
+		result[1] = 550 - (count * 42) + 21;
+	} else if (pointNumber == barPoints[1])  {
+    result[0] = 300;
+    result[1] = 550 - (count * 42) + 21;
+  } else {
+		result[0] = 300;
+		result[1] = (count * 42) + 21;
+	}
+
+	return result;
 }
