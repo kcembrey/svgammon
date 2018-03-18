@@ -814,6 +814,7 @@ function get2PlayerGameData(p1Name, p2Name){
       gameData = activeGame.val();
       if (p1Name === gameData.player2) {
         localPlayer = 2;
+        flipBoard();
       }
       playerNames[1] = gameData.player1;
       playerNames[2] = gameData.player2;
@@ -862,4 +863,15 @@ function monitorForOpponentPlay(){
     //Set player label to the active player
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
   });
+}
+
+function flipBoard(){
+  var svgContainer = document.getElementById('svgObj');
+  var currentTransform = svgContainer.style.webkitTransform;
+  if (currentTransform === '') {
+    svgContainer.style.webkitTransform = 'scaleY(-1)';
+  }
+  else {
+    svgContainer.style.webkitTransform = '';
+  }
 }
