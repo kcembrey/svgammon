@@ -73,7 +73,7 @@ class boardPoint {
 		};
   }
 
-  checkerCount() {
+  get checkerCount() {
     return this._checkers.length;
   }
 }
@@ -521,7 +521,7 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 function rollDice() {
   var canPlay;
 
-  if (localPlayer === activePlayer) {
+  if (!localPlayer || localPlayer === activePlayer) {
     //Get random numbers for the dice
   	diceValue[0] = Math.floor((Math.random() * 6) + 1);
   	diceValue[1] = Math.floor((Math.random() * 6) + 1);
