@@ -763,28 +763,33 @@ function submitPlayerNames(){
 }
 
 //Get unique game id of 2 player game
-function get2PlayerGameData(player1Name, player2Name){
+function get2PlayerGameData(p1Name, p2Name){
   var gameData;
   var createGame = true;
   var firebaseRef = firebaseData.ref();
+    //playerCheckerCount = [0, 0, 0];
   // Get current active games from Firebase
-  firebaseRef.child('activeGames').orderByChild('combinedPlayerNames').equalTo(combinePlayerNames(player1Name, player2Name)).once('value', function(snapshot){
+  firebaseRef.child('activeGames').orderByChild('combinedPlayerNames').equalTo(combinePlayerNames(p1Name, p2Name)).once('value', function(snapshot){
     snapshot.forEach(function(activeGame){
       createGame = false;
       multiplayerGameID = activeGame.key;
       gameData = activeGame.val();
-      if (player1Name === gameData.player2) {
+      if (p1Name === gameData.player2) {
         localPlayer = 2;
       }
-      player1Name = gameData.player1;
-      player2Name = gameData.player2;
+      playerNames[1] = gameData.player1;
+      playerNames[2] = gameData.player2;
+      //activePlayer = gameData.activePlayer;
+      //points = populate2PlayerPoints(gameData.points);
+      //Set player label to the active player
+      //document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
     });
     if (createGame) {
       multiplayerGameID = firebaseRef.child('activeGames').push({
         'activePlayer':activePlayer,
-        'combinedPlayerNames':combinePlayerNames(player1Name, player2Name),
-        'player1':player1Name,
-        'player2':player2Name,
+        'combinedPlayerNames':combinePlayerNames(p1Name, p2Name),
+        'player1':p1Name,
+        'player2':p2Name,
         'points':points.map(a => a.toJSON)
       }).key;
     }
@@ -812,8 +817,8 @@ function update2PlayerGameData(){
 }
 
 function combinePlayerNames(player1Name, player2Name){
-  player1Name = player1Name.toString();
-  player2Name = player2Name.toString();
+  playerNames[1] = player1Name.toString();
+  playerNames[2] = player2Name.toString();
   if (player1Name < player2Name) {
     return player1Name + player2Name;
   }
@@ -826,6 +831,7 @@ function monitorForOpponentPlay(){
     playerCheckerCount = [0, 0, 0];
     gameData = snapshot.val();
     points = populate2PlayerPoints(gameData.points);
+    repopulateCheckers(points);
     activePlayer = gameData.activePlayer;
 
     //Set player label to the active player
