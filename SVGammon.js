@@ -68,13 +68,9 @@ class boardPoint {
   get toJSON() {
     return {
 			id: this._id,
-      checkers: this.checkerCount(),
+      checkers: this._checkers.length,
 			player: this._player
 		};
-  }
-
-  get checkerCount() {
-    return this._checkers.length;
   }
 }
 
@@ -164,6 +160,9 @@ function initiate(){
 function resetBoard() {
   if(confirm('Are you sure you\'d like to reset the board?')){
     populateBoard();
+    if (multiplayerGameID) {
+      update2PlayerGameData();
+    }
   }
 }
 
@@ -171,20 +170,23 @@ function resetBoard() {
 function populateBoard() {
   var checkers;
   var player;
+  var pointData = [];
 
   if (!initiated) {
     initiate();
+    //Board has been initiated
+    initiated = true;
   }
 
   //Reset global variables
   activePlayer = 1;
   activeChecker = null;
-  multiplayerGameID = null;
   diceActive = [false, false];
   diceDoubles = [false, false];
   hotpoint1 = 0;
   hotpoint2 = 0;
   hotpoint3 = 0;
+  playerCheckerCount = [0,0,0];
 
   //Populate points globals
 	for (i = 0; i <= 25; i++) {
@@ -217,26 +219,41 @@ function populateBoard() {
         break;
       default:
         player = 0;
-        checkers = [];
+        checkers = 0;
     }
-		points[i] = new boardPoint(i, checkers, player);
+    pointData[i] = {
+			id: i,
+      checkers: checkers,
+			player: player
+		};
 	}
 
   //Populate bar point globals
   for (i = 100; i <= barPoints[1]; i+= barPoints[2]) {
-    points[i] = new boardPoint(i, 0, 0);
+    pointData[i] = {
+			id: i,
+      checkers: 0,
+			player: 0
+		};
   }
-
-  //Board has been initiated
-  initiated = true;
 
   //Hide the dice
 	hideDice();
 
+  points = populateBoardPoints(pointData);
   repopulateCheckers(points);
 
   //Set player label to the active player (1)
   document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+}
+
+function populateBoardPoints(pointData){
+  var result = [];
+  playerCheckerCount = [0,0,0];
+  for (var key in pointData) {
+    result[pointData[key].id] = (new boardPoint(pointData[key].id, pointData[key].checkers, pointData[key].player));
+  }
+  return result;
 }
 
 function initiateCheckers(player, countOfCheckers){
@@ -498,7 +515,7 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
     //Only adjust the original point's count and player if the board is not being cleared and the checker is on a current point
     if (!clearBoard && curPoint) {
       removeCheckerFromArray(points[curPoint].checkers, curChecker);
-      if (points[curPoint].checkerCount === 0) {
+      if (points[curPoint].checkers.length === 0) {
         points[curPoint].player = 0;
       }
     }
@@ -753,7 +770,6 @@ function initiate2Player(){
 //Retrieve player names and setup a 2 player game
 function submitPlayerNames(){
   var modal = document.getElementById('2PlayerModal');
-  playerCheckerCount = [0,0,0];
   modal.style.display = 'none';
   playerNames[1] = document.getElementById('Player1Input').value;
   playerNames[2] = document.getElementById('Player2Input').value;
@@ -767,7 +783,7 @@ function get2PlayerGameData(p1Name, p2Name){
   var gameData;
   var createGame = true;
   var firebaseRef = firebaseData.ref();
-    //playerCheckerCount = [0, 0, 0];
+
   // Get current active games from Firebase
   firebaseRef.child('activeGames').orderByChild('combinedPlayerNames').equalTo(combinePlayerNames(p1Name, p2Name)).once('value', function(snapshot){
     snapshot.forEach(function(activeGame){
@@ -779,10 +795,6 @@ function get2PlayerGameData(p1Name, p2Name){
       }
       playerNames[1] = gameData.player1;
       playerNames[2] = gameData.player2;
-      //activePlayer = gameData.activePlayer;
-      //points = populate2PlayerPoints(gameData.points);
-      //Set player label to the active player
-      //document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
     });
     if (createGame) {
       multiplayerGameID = firebaseRef.child('activeGames').push({
@@ -795,14 +807,6 @@ function get2PlayerGameData(p1Name, p2Name){
     }
     monitorForOpponentPlay();
   });
-}
-
-function populate2PlayerPoints(pointData){
-  var result = [];
-  for (var key in pointData) {
-    result[pointData[key].id] = (new boardPoint(pointData[key].id, pointData[key].checkers, pointData[key].player));
-  }
-  return result;
 }
 
 function update2PlayerGameData(){
@@ -828,9 +832,8 @@ function combinePlayerNames(player1Name, player2Name){
 function monitorForOpponentPlay(){
   var firebaseRef = firebaseData.ref('activeGames').child(multiplayerGameID);
   firebaseRef.on('value', function(snapshot){
-    playerCheckerCount = [0, 0, 0];
     gameData = snapshot.val();
-    points = populate2PlayerPoints(gameData.points);
+    points = populateBoardPoints(gameData.points);
     repopulateCheckers(points);
     activePlayer = gameData.activePlayer;
 
