@@ -12,6 +12,7 @@ var hotpoint2;
 var hotpoint3;
 var element;
 var initiated = false;
+var playerNames = [null, 1, 2];
 var player1Name = 1;
 var player2Name = 2;
 var checkerFill = ['','black','brown'];
@@ -31,11 +32,12 @@ var playerCheckerCount = [0,0,0];
 var diceValue = [0,0];
 var channel;
 var firebaseData;
+var localPlayer;
 
 class boardPoint {
-  constructor(id, checkers, player) {
+  constructor(id, checkerCount, player) {
     this.id = id;
-    this.checkers = checkers;
+    this.checkers = initiateCheckers(player,checkerCount);
     this.player = player;
   }
 
@@ -65,14 +67,14 @@ class boardPoint {
 
   get toJSON() {
     return {
-			id: this.id,
+			id: this._id,
       checkers: this.checkerCount(),
-			player: this.player
+			player: this._player
 		};
   }
 
   checkerCount() {
-    return this.checkers.length;
+    return this._checkers.length;
   }
 }
 
@@ -189,29 +191,29 @@ function populateBoard() {
     switch (i) {
       case 1:
         player = 1;
-        checkers = initiateCheckers(player,2);
+        checkers = 2;
         break;
       case 6:
       case 13:
         player = 2;
-        checkers = initiateCheckers(player,5);
+        checkers = 5;
         break;
       case 8:
         player = 2;
-        checkers = initiateCheckers(player,3);
+        checkers = 3;
         break;
       case 12:
       case 19:
         player = 1;
-        checkers = initiateCheckers(player,5);
+        checkers = 5;
         break;
       case 17:
         player = 1;
-        checkers = initiateCheckers(player,3);
+        checkers = 3;
         break;
       case 24:
         player = 2;
-        checkers = initiateCheckers(player,2);
+        checkers = 2;
         break;
       default:
         player = 0;
@@ -222,7 +224,7 @@ function populateBoard() {
 
   //Populate bar point globals
   for (i = 100; i <= barPoints[1]; i+= barPoints[2]) {
-    points[i] = new boardPoint(i, [], 0);
+    points[i] = new boardPoint(i, 0, 0);
   }
 
   //Board has been initiated
@@ -234,18 +236,7 @@ function populateBoard() {
   repopulateCheckers(points);
 
   //Set player label to the active player (1)
-  document.getElementById('playerLabel').innerHTML = activePlayer;
-}
-
-//Initiates a checker to its starting location
-function initiateChecker(player, checkerIndex, point){
-  checker = 'p' + player + 'c' + checkerIndex;
-  moveChecker(checker, point, player, true);
-  if(!initiated){
-    $("#" + checker).click(function () {
-        checkerClick(this);
-      });
-  }
+  document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
 }
 
 function initiateCheckers(player, countOfCheckers){
@@ -254,14 +245,17 @@ function initiateCheckers(player, countOfCheckers){
   var svgns = 'http://www.w3.org/2000/svg';
 
   for (var i = 1; i <= countOfCheckers; i++) {
-    checker = document.createElementNS(svgns, 'circle');
-    checker.setAttributeNS(null, 'id', 'p' + player + 'c' + playerCheckerCount[player]);
-    checker.setAttributeNS(null, 'r', '20');
-    checker.setAttributeNS(null, 'stroke', 'black');
-    checker.setAttributeNS(null, 'stroke-width', '1');
-    checker.setAttributeNS(null, 'fill', checkerFill[player]);
-    document.getElementById('svgObj').appendChild(checker);
-    checker.addEventListener('click', checkerClick);
+    checker = document.getElementById('p' + player + 'c' + playerCheckerCount[player]);
+    if (!checker){
+      checker = document.createElementNS(svgns, 'circle');
+      checker.setAttributeNS(null, 'id', 'p' + player + 'c' + playerCheckerCount[player]);
+      checker.setAttributeNS(null, 'r', '20');
+      checker.setAttributeNS(null, 'stroke', 'black');
+      checker.setAttributeNS(null, 'stroke-width', '1');
+      checker.setAttributeNS(null, 'fill', checkerFill[player]);
+      document.getElementById('svgObj').appendChild(checker);
+      checker.addEventListener('click', checkerClick);
+    }
     curCheckers.push(checker);
     playerCheckerCount[player]++;
   }
@@ -271,9 +265,9 @@ function initiateCheckers(player, countOfCheckers){
 //Function when checker is clicked
 function checkerClick() {
   var checker = this;
-	var onPoint = checker.getAttribute("onPoint");
+	var onPoint = checker.attributes.onPoint.value;
 	var checkerID = checker.id;
-	var player = parseFloat(checker.id.split("p")[1].split("c")[0]);
+	var player = parseFloat(checker.id.split('p')[1].split('c')[0]);
 	var point1;
 	var point2;
   var point3;
@@ -286,100 +280,107 @@ function checkerClick() {
   var canGoHome = false;
   var topChecker = findTopChecker(numOnPoint);
 
+  //Only continue if it is the local player's turn
+  if(!localPlayer || localPlayer === activePlayer){
 
-  //Clears selected checker if it is the active one
-  if (activeChecker && activeChecker === checker) {
-    resetActive();
-    return false;
-  }
-
-  //Assumes player is moving the active checker to the point under the selected checker if an available move
-  else if (activeChecker && activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2|| 't' + numOnPoint === hotpoint3)) {
-    pointClick(activeChecker.id, document.getElementById('t' + numOnPoint), player);
-  }
-
-  //If a checker is not active and the selected checker belongs to the player, continue to check for available moves
-  else if (!activeChecker || activePlayer === player) {
-
-    //Select the top checker on the point if this is not the top checker
-    if(topChecker != checker){
-      checkerClick(topChecker);
+    //Clears selected checker if it is the active one
+    if (activeChecker && activeChecker === checker) {
+      resetActive();
       return false;
     }
-    //Set points and prerequisites for moves
-  	if (player === 1) {
-      canGoHome = points[19].checkers.length + points[20].checkers.length + points[21].checkers.length + points[22].checkers.length + points[23].checkers.length + points[24].checkers.length + points[25].checkers.length === 15;
-      numOnPoint = barPieceSelected ? 0 : numOnPoint;
-  		point1 = (numOnPoint + numD1);
-  		point2 = (numOnPoint + numD2);
-      point3 = (numOnPoint + numD1 + numD2);
-  	} else {
-      canGoHome = points[0].checkers.length + points[1].checkers.length + points[2].checkers.length + points[3].checkers.length + points[4].checkers.length + points[5].checkers.length + points[6].checkers.length === 15;
-      numOnPoint = barPieceSelected ? 25 : numOnPoint;
-  		point1 = (numOnPoint - numD1);
-  		point2 = (numOnPoint - numD2);
-      point3 = (numOnPoint - numD1 - numD2);
-  	}
 
-    //Reset any active points
-    resetActive();
-
-    //If the player is the active player and they're either not on the bar or have selected a bar piece
-    if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
-    {
-      //Checks for an available move using the first di and activates the relevant point
-    	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
-        canPlay = true;
-        hotpoint1 = 't' + point1;
-    		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
-    		$('#t' + point1).click(function () {
-    				pointClick(checkerID, document.getElementById('t' + point1), player);
-    			});
-    	}
-
-      //Checks for an available move using the second di and activates the relevant point
-    	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
-        canPlay = true;
-        hotpoint2 = 't' + point2;
-    		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
-    		$('#t' + point2).click(function () {
-    				pointClick(checkerID, document.getElementById('t' + point2), player);
-    			});
-    	}
-
-      //Checks for an available move using both dice and activates the relevant point
-      if (diceActive[0] && diceActive[1] && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
-        canPlay = true;
-        hotpoint3 = 't' + point3;
-    		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
-    		$('#t' + point3).click(function () {
-    				pointClick(checkerID, document.getElementById('t' + point3), player);
-    			});
-    	}
+    //Assumes player is moving the active checker to the point under the selected checker if an available move
+    else if (activeChecker && activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2|| 't' + numOnPoint === hotpoint3)) {
+      pointClick(activeChecker.id, document.getElementById('t' + numOnPoint), player);
     }
 
-    //Activates the selected checker if there is a valid move
-    if (canPlay) {
-      activeChecker = checker;
-      $(checker).attr('fill', activeCheckerFill);
+    //If a checker is not active and the selected checker belongs to the player, continue to check for available moves
+    else if (!activeChecker || activePlayer === player) {
+
+      //Select the top checker on the point if this is not the top checker
+      if(topChecker != checker){
+        checkerClick(topChecker);
+        return false;
+      }
+      //Set points and prerequisites for moves
+    	if (player === 1) {
+        canGoHome = points[19].checkers.length + points[20].checkers.length + points[21].checkers.length + points[22].checkers.length + points[23].checkers.length + points[24].checkers.length + points[25].checkers.length === 15;
+        numOnPoint = barPieceSelected ? 0 : numOnPoint;
+    		point1 = (numOnPoint + numD1);
+    		point2 = (numOnPoint + numD2);
+        point3 = (numOnPoint + numD1 + numD2);
+    	} else {
+        canGoHome = points[0].checkers.length + points[1].checkers.length + points[2].checkers.length + points[3].checkers.length + points[4].checkers.length + points[5].checkers.length + points[6].checkers.length === 15;
+        numOnPoint = barPieceSelected ? 25 : numOnPoint;
+    		point1 = (numOnPoint - numD1);
+    		point2 = (numOnPoint - numD2);
+        point3 = (numOnPoint - numD1 - numD2);
+    	}
+
+      //Reset any active points
+      resetActive();
+
+      //If the player is the active player and they're either not on the bar or have selected a bar piece
+      if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
+      {
+        //Checks for an available move using the first di and activates the relevant point
+      	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
+          canPlay = true;
+          hotpoint1 = 't' + point1;
+      		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
+      		$('#t' + point1).click(function () {
+      				pointClick(checkerID, document.getElementById('t' + point1), player);
+      			});
+      	}
+
+        //Checks for an available move using the second di and activates the relevant point
+      	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
+          canPlay = true;
+          hotpoint2 = 't' + point2;
+      		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
+      		$('#t' + point2).click(function () {
+      				pointClick(checkerID, document.getElementById('t' + point2), player);
+      			});
+      	}
+
+        //Checks for an available move using both dice and activates the relevant point
+        if (diceActive[0] && diceActive[1] && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
+          canPlay = true;
+          hotpoint3 = 't' + point3;
+      		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
+      		$('#t' + point3).click(function () {
+      				pointClick(checkerID, document.getElementById('t' + point3), player);
+      			});
+      	}
+      }
+
+      //Activates the selected checker if there is a valid move
+      if (canPlay) {
+        activeChecker = checker;
+        $(checker).attr('fill', activeCheckerFill);
+      }
+
+      //Flashes the checker if there are no valid moves
+      else {
+        flashChecker(checker, player);
+      }
     }
 
-    //Flashes the checker if there are no valid moves
+    //Flashes the checker as it doesn't belong to the player or they are on the bar
     else {
-        $(checker).attr('fill', noPlayCheckerFill);
-        setTimeout(function(){
-          $(checker).attr('fill', checkerFill[player]);
-        }, 500);
+      flashChecker(checker, player);
     }
   }
-
-  //Flashes the checker as it doesn't belong to the player or they are on the bar
   else {
-        $(checker).attr('fill', noPlayCheckerFill);
-        setTimeout(function(){
-          $(checker).attr('fill', checkerFill[player]);
-        }, 500);
+    flashChecker(checker, player);
   }
+}
+
+function flashChecker(checker, player){
+  $(checker).attr('fill', noPlayCheckerFill);
+  setTimeout(function(){
+    $(checker).attr('fill', checkerFill[player]);
+  }, 500);
 }
 
 //Reset all active checkers and points
@@ -458,10 +459,16 @@ function pointClick(checkerID, point, player) {
     updateDi(1);
 	}
 
+  checkForWin();
+  repopulateCheckers(points);
+
   //Change to alternate player if there are no dice  values left
   if (!diceActive[0] && !diceActive[1]){
     activePlayer = activePlayer === 1 ? 2 : 1;
-    document.getElementById('playerLabel').innerHTML = activePlayer;
+    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+  }
+  if (multiplayerGameID) {
+    update2PlayerGameData();
   }
 
 	return true;
@@ -507,9 +514,6 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 
     points[pointNumber].player = player;
     points[pointNumber].checkers.push(curChecker);
-
-    checkForWin();
-    repopulateCheckers(points);
   }
 }
 
@@ -669,7 +673,7 @@ function findTopChecker(pointNumber){
 function checkForWin(){
   var wonGame = activePlayer === 1 ? points[25].checkers.length === 15 : points[0].checkers.length === 15;
   if (wonGame) {
-    document.getElementById('playerLabel').innerHTML = activePlayer + ' WON THE GAME!!!';
+    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer] + ' WON THE GAME!!!';
     hideDice();
   }
   return wonGame;
@@ -681,6 +685,7 @@ function checkForWin(){
 //Re-Populates the board from points object
 function repopulateCheckers(points){
   var point;
+
   for (var pointIndex in points){
     point = points[pointIndex];
 
@@ -747,11 +752,13 @@ function initiate2Player(){
 //Retrieve player names and setup a 2 player game
 function submitPlayerNames(){
   var modal = document.getElementById('2PlayerModal');
+  playerCheckerCount = [0,0,0];
   modal.style.display = 'none';
-  player1Name = document.getElementById('Player1Input').value;
-  player2Name = document.getElementById('Player2Input').value;
+  playerNames[1] = document.getElementById('Player1Input').value;
+  playerNames[2] = document.getElementById('Player2Input').value;
+  localPlayer = 1;
   firebaseData = firebase.database();
-  get2PlayerGameData(player1Name, player2Name);
+  get2PlayerGameData(playerNames[1], playerNames[2]);
 }
 
 //Get unique game id of 2 player game
@@ -766,10 +773,15 @@ function get2PlayerGameData(player1Name, player2Name){
       createGame = false;
       multiplayerGameID = activeGame.key;
       gameData = activeGame.val();
+      if (player1Name === gameData.player2) {
+        localPlayer = 2;
+      }
       player1Name = gameData.player1;
       player2Name = gameData.player2;
       activePlayer = gameData.activePlayer;
-      points = gameData.points;
+      points = populate2PlayerPoints(gameData.points);
+      //Set player label to the active player
+      document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
     });
     if (createGame) {
       multiplayerGameID = firebaseRef.child('activeGames').push({
@@ -777,27 +789,50 @@ function get2PlayerGameData(player1Name, player2Name){
         'combinedPlayerNames':combinePlayerNames(player1Name, player2Name),
         'player1':player1Name,
         'player2':player2Name,
-        'points':points
+        'points':points.map(a => a.toJSON)
       }).key;
     }
     repopulateCheckers(points);
+    monitorForOpponentPlay();
   });
+}
+
+function populate2PlayerPoints(pointData){
+  var result = [];
+  for (var key in pointData) {
+    result[pointData[key].id] = (new boardPoint(pointData[key].id, pointData[key].checkers, pointData[key].player));
+  }
+  return result;
 }
 
 function update2PlayerGameData(){
     //write the game data to the server
   firebaseData.ref('activeGames/' + multiplayerGameID).set({
     'activePlayer':activePlayer,
-    'combinedPlayerNames':combinePlayerNames(player1Name, player2Name),
-    'player1':player1Name,
-    'player2':player2Name,
-    'points':points
+    'combinedPlayerNames':combinePlayerNames(playerNames[1], playerNames[2]),
+    'player1':playerNames[1],
+    'player2':playerNames[2],
+    'points':points.map(a => a.toJSON)
   });
 }
 
 function combinePlayerNames(player1Name, player2Name){
+  player1Name = player1Name.toString();
+  player2Name = player2Name.toString();
   if (player1Name < player2Name) {
     return player1Name + player2Name;
   }
-  return player2Namer + player1Name;
+  return player2Name + player1Name;
+}
+
+function monitorForOpponentPlay(){
+  var firebaseRef = firebaseData.ref('activeGames').child(multiplayerGameID);
+  firebaseRef.on('value', function(snapshot){
+    gameData = snapshot.val();
+    points = populate2PlayerPoints(gameData.points);
+    activePlayer = gameData.activePlayer;
+
+    //Set player label to the active player
+    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+  });
 }
