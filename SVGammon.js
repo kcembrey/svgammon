@@ -756,63 +756,59 @@ function initiate2Player(){
 function submitPlayerNames(){
   var modal = document.getElementById('2PlayerModal');
   modal.style.display = 'none';
-  var player1Name = document.getElementById('Player1Input').value;
-  var player2Name = document.getElementById('Player2Input').value;
+  player1Name = document.getElementById('Player1Input').value;
+  player2Name = document.getElementById('Player2Input').value;
   firebaseData = firebase.database();
   get2PlayerGameData(player1Name, player2Name);
 }
 
 //Get unique game id of 2 player game
 function get2PlayerGameData(player1Name, player2Name){
-  var gameID;
   var gameData;
+  var createGame = true;
+  var firebaseRef = firebaseData.ref();
 
-  // setup a database reference at path /channels/channelId
-  channel = firebaseData.ref('svgammon-multiplayer');
-
-  for (var activeGame in channel){
-    if (activeGame.player1 === player1Name || activeGame.player2 === player1Name) {
-      gameData = activeGame;
-      gameID = activeGame.id;
+  // Get current active games from Firebase
+  firebaseRef.child('activeGames').orderByChild('combinedPlayerNames').equalTo(combinePlayerNames(player1Name, player2Name)).once('value', function(snapshot){
+    snapshot.forEach(function(activeGame){
+      createGame = false;
+      multiplayerGameID = activeGame.key;
+      gameData = activeGame.val();
+      player1Name = gameData.player1;
+      player2Name = gameData.player2;
+      activePlayer = gameData.activePlayer;
+      points = gameData.points;
+    });
+    if (createGame) {
+      multiplayerGameID = firebaseRef.child('activeGames').push({
+        'activePlayer':activePlayer,
+        'combinedPlayerNames':combinePlayerNames(player1Name, player2Name),
+        'player1':player1Name,
+        'player2':player2Name,
+        'points':points
+      }).key;
     }
-  }
-  if (!gameData) {
-    gameID = guid();
-    gameData = { gameID:{
-      'player1':player1Name,
-      'player2':player2Name,
-      'activePlayer':1,
-      'points':points
-    }};
-  }
-
-  multiplayerGameID = gameID;
-  player1Name = gameData.gameID.player1;
-  player2Name = gameData.gameID.player2;
-  activePlayer = gameData.gameID.activePlayer;
-  points = gameData.gameID.points;
-  update2PlayerGameData();
-  repopulateCheckers(points);
+    repopulateCheckers(points);
+  });
 }
 
 function update2PlayerGameData(){
     //write the game data to the server
-  firebaseData.ref('svgammon-multiplayer/' + multiplayerGameID).set({
+  firebaseData.ref('activeGames/' + multiplayerGameID).set({
     'activePlayer':activePlayer,
+    'combinedPlayerNames':combinePlayerNames(player1Name, player2Name),
     'player1':player1Name,
     'player2':player2Name,
     'points':points
   });
 }
 
-function guid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+function combinePlayerNames(player1Name, player2Name){
+  if (player1Name < player2Name) {
+    return player1Name + player2Name;
+  }
+  return player2Namer + player1Name;
 }
-
-
 
 /////////////////////////////FireBase Methods/////////////////
 function onMessage(){
