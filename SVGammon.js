@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 var points = [];
 var diceActive;
 var diceDoubles;
@@ -30,12 +32,55 @@ var diceValue = [0,0];
 var channel;
 var firebaseData;
 
+class boardPoint {
+  constructor(id, checkers, player) {
+    this.id = id;
+    this.checkers = checkers;
+    this.player = player;
+  }
+
+  get id() {
+    return this._id;
+  }
+
+  set id(value) {
+      this._id = value;
+  }
+
+  get checkers() {
+    return this._checkers;
+  }
+
+  set checkers(value) {
+      this._checkers = value;
+  }
+
+  get player() {
+    return this._player;
+  }
+
+  set player(value) {
+      this._player = value;
+  }
+
+  get toJSON() {
+    return {
+			id: this.id,
+      checkers: this.checkerCount(),
+			player: this.player
+		};
+  }
+
+  checkerCount() {
+    return this.checkers.length;
+  }
+}
+
+
+
 populateBoard();
 
-function onLoad() {
-	//svg.text(10, 20, error || 'Loaded into ' + this.id);
-	//resetSize(svg, null, null); //'100%', '100%');
-}
+
 
 //Initiate required board pieces the first time
 function initiate(){
@@ -48,23 +93,6 @@ function initiate(){
   var rx;
   var svgns = 'http://www.w3.org/2000/svg';
   var element;
-
-  // //Create all checker SVG objects
-  // for (i = 1; i <= 15; i++) {
-  //   checker = document.createElementNS(svgns, 'circle');
-  //   checker.setAttributeNS(null, 'id', 'p' + player + 'c' + i);
-  //   checker.setAttributeNS(null, 'r', '20');
-  //   checker.setAttributeNS(null, 'stroke', 'black');
-  //   checker.setAttributeNS(null, 'stroke-width', '1');
-  //   checker.setAttributeNS(null, 'fill', player === 1 ? p1CheckerFill : p2CheckerFill);
-  //   document.getElementById('svgObj').appendChild(checker);
-  //
-  //   //Loop through again for player 2
-  //   if (player === 1 && i === 15) {
-  //     i = 0;
-  //     player = 2;
-  //   }
-  // }
 
   //Create Dice SVG objects
   for (i = 1; i <= 7; i++) {
@@ -189,49 +217,13 @@ function populateBoard() {
         player = 0;
         checkers = [];
     }
-		points[i] = {
-			id: i,
-      checkers: checkers,
-			player: player
-		};
+		points[i] = new boardPoint(i, checkers, player);
 	}
 
   //Populate bar point globals
   for (i = 100; i <= barPoints[1]; i+= barPoints[2]) {
-    points[i] = {
-      id: i,
-      checkers: [],
-      player: 0
-    };
+    points[i] = new boardPoint(i, [], 0);
   }
-
-  // //Move checkers to their starting locations - Player 1
-	// for (i = 1; i <= 2; i++) {
-  //   initiateChecker(1, i, 1);
-	// }
-	// for (i = 3; i <= 7; i++) {
-  //   initiateChecker(1, i, 12);
-	// }
-	// for (i = 8; i <= 10; i++) {
-  //   initiateChecker(1, i, 17);
-	// }
-	// for (i = 11; i <= 15; i++) {
-  //   initiateChecker(1, i, 19);
-	// }
-  //
-  // //Move checkers to their starting locations - Player 2
-	// for (i = 1; i <= 5; i++) {
-  //   initiateChecker(2, i, 6);
-	// }
-	// for (i = 6; i <= 8; i++) {
-  //   initiateChecker(2, i, 8);
-	// }
-	// for (i = 9; i <= 13; i++) {
-  //   initiateChecker(2, i, 13);
-	// }
-	// for (i = 14; i <= 15; i++) {
-  //   initiateChecker(2, i, 24);
-	// }
 
   //Board has been initiated
   initiated = true;
@@ -501,7 +493,7 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
     //Only adjust the original point's count and player if the board is not being cleared and the checker is on a current point
     if (!clearBoard && curPoint) {
       removeCheckerFromArray(points[curPoint].checkers, curChecker);
-      if (points[curPoint].checkers.length === 0) {
+      if (points[curPoint].checkerCount === 0) {
         points[curPoint].player = 0;
       }
     }
@@ -808,30 +800,4 @@ function combinePlayerNames(player1Name, player2Name){
     return player1Name + player2Name;
   }
   return player2Namer + player1Name;
-}
-
-/////////////////////////////FireBase Methods/////////////////
-function onMessage(){
-
-}
-
-function openChannel() {
-  // sign into Firebase with the token passed from the server
-  firebase.auth().signInWithCustomToken(token).catch(function(error) {
-    console.log('Login Failed!', error.code);
-    console.log('Error message: ', error.message);
-  });
-
-  // setup a database reference at path /channels/channelId
-  channel = firebase.database().ref('channels/' + channelId);
-  // add a listener to the path that fires any time the value of the data changes
-  channel.on('value', function(data) {
-    onMessage(data.val());
-  });
-  onOpened();
-  // let the server know that the channel is open
-}
-
-function onOpened() {
-  $.post('/opened');
 }
