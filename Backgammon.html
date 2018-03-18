@@ -1,80 +1,83 @@
 <!DOCTYPE html>
 <html margin="0" height="100%" width="100%">
+
 <head>
 </head>
+
 <body margin="0" height="100%" width="100%">
-<div id="svgContainer" onload="populateBoard()" height="100%" width="100%">
-    <svg id="svgObj" width="600" height="590">
-		<polygon id="t1" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t2" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t3" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t4" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t5" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t6" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t7" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t8" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t9" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t10" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t11" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t12" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t13" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t14" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t15" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t16" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t17" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t18" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t19" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t20" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t21" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t22" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="t23" stroke="black" fill="red" stroke-width="1" />
-		<polygon id="t24" stroke="black" fill="white" stroke-width="1" />
-		<polygon id="bar" points="280 0, 320 0, 320 590, 280 590" stroke="black" fill="green" stroke-width="1" />
-		<polygon id="ledge" points="0 0, 40 0, 40 590, 0 590" stroke="black" fill="darkblue" stroke-width="1" />
-		<polygon id="t0" points="560 0, 600 0, 600 295, 560 295" stroke="black" fill="blue" stroke-width="4" />
-		<polygon id="t25" points="560 295, 600 295, 600 590, 560 590" stroke="black" fill="blue" stroke-width="4" />
-</svg>
- </div>
-<input id="d1value" type="hidden" value="0"/>
-<input id="d2value" type="hidden" value="0"/>
-<input id="button1" type="button" value="Reset Board"
-            onclick="resetBoard()"/>
-<input id="button2" type="button" value="Roll Dice"
-            onclick="rollDice(1,6)"/>
-<input id="button3" type="button" value="2 Player Game"
-            onclick="initiateOnlineGame()"/>
-<span><label>Player </label><label id="playerLabel"></label></span>
+  <div id='gameContainer'>
+    <div id="svgContainer" onload="populateBoard()" height="100%" width="100%">
+      <svg id="svgObj" width="600" height="590">
+    		<polygon id="t1" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t2" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t3" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t4" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t5" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t6" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t7" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t8" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t9" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t10" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t11" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t12" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t13" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t14" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t15" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t16" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t17" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t18" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t19" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t20" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t21" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t22" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="t23" stroke="black" fill="red" stroke-width="1" />
+    		<polygon id="t24" stroke="black" fill="white" stroke-width="1" />
+    		<polygon id="bar" points="280 0, 320 0, 320 590, 280 590" stroke="black" fill="green" stroke-width="1" />
+    		<polygon id="ledge" points="0 0, 40 0, 40 590, 0 590" stroke="black" fill="darkblue" stroke-width="1" />
+    		<polygon id="t0" points="560 0, 600 0, 600 295, 560 295" stroke="black" fill="blue" stroke-width="4" />
+    		<polygon id="t25" points="560 295, 600 295, 600 590, 560 590" stroke="black" fill="blue" stroke-width="4" />
+      </svg>
+    </div>
 
-<!-- 2 Player Modal -->
-<div id="OnlineGameModal" class="modal" style="display:none; position: fixed; z-index: 1; left: 100; top: 100; width: 280px; height: 210px; background-color: rgb(20,20,20)">
+    <input id="d1value" type="hidden" value="0" />
+    <input id="d2value" type="hidden" value="0" />
+    <input id="button1" type="button" value="Reset Board" onclick="resetBoard()" />
+    <input id="button2" type="button" value="Roll Dice" onclick="rollDice(1,6)" />
+    <input id="button3" type="button" value="2 Player Game" onclick="initiateOnlineGame()" />
+    <span><label>Player </label><label id="playerLabel"></label></span>
 
-  <!-- Modal content -->
-  <div class="modal-content" style="background-color: #fefefe; margin: 9px auto; padding: 20px; border: 1px solid #888; width: 80%;">
-    <p id="OnlineGameModalNotice">Enter your player name and opponent player's name</p>
-    <label>Your Name</label>
-    <input id="Player1Input" type="text"></input>
-    <label>Opponent's Name</label>
-    <input id="Player2Input" type="text"></input>
-    <input id="SubmitNames" type="button" value="Submit" onclick="submitPlayerNames()"</button>
+    <!-- 2 Player Modal -->
+    <div id="OnlineGameModal" class="modal" style="display:none; position: fixed; z-index: 1; left: 20%; top: 20%; width: 280px; height: 210px; background-color: rgb(20,20,20)">
+
+      <!-- Modal content -->
+      <div class="modal-content" style="background-color: #fefefe; margin: 9px auto; padding: 20px; border: 1px solid #888; width: 80%;">
+        <p id="OnlineGameModalNotice">Enter your player name and opponent player's name</p>
+        <label>Your Name</label>
+        <input id="Player1Input" type="text"></input>
+        <label>Opponent's Name</label>
+        <input id="Player2Input" type="text"></input>
+        <input id="SubmitNames" type="button" value="Submit" onclick="submitPlayerNames()" </button>
+      </div>
+
+    </div>
   </div>
 
-</div>
 
-
-<script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
-<script>
-  // Initialize Firebase
-  var config = {
-    apiKey: "AIzaSyAqA6Y5je6DNj_fY22bjhFWG_ufzuha7_k",
-    authDomain: "svgammon-multiplayer.firebaseapp.com",
-    databaseURL: "https://svgammon-multiplayer.firebaseio.com",
-    projectId: "svgammon-multiplayer",
-    storageBucket: "",
-    messagingSenderId: "684978248262"
-  };
-  firebase.initializeApp(config);
-</script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="svgammon.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyAqA6Y5je6DNj_fY22bjhFWG_ufzuha7_k",
+      authDomain: "svgammon-multiplayer.firebaseapp.com",
+      databaseURL: "https://svgammon-multiplayer.firebaseio.com",
+      projectId: "svgammon-multiplayer",
+      storageBucket: "",
+      messagingSenderId: "684978248262"
+    };
+    firebase.initializeApp(config);
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="svgammon.js"></script>
 </body>
+
 </html>
