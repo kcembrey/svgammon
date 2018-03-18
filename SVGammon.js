@@ -154,6 +154,10 @@ function initiate(){
 		document.getElementById("t" + (i + 12))
 			.setAttribute("points", (i * 40 + 40) + " 590, " + (i * 40 + 60) + " 360, " + (i * 40 + 80) + " 590");
 	}
+
+  //Setup onEnter event listeners for Online Game Modal
+  document.getElementById('Player1Input').addEventListener('keyup', onlineModalKeyPress);
+  document.getElementById('Player2Input').addEventListener('keyup', onlineModalKeyPress);
 }
 
 //Reset button pressed
@@ -760,22 +764,40 @@ function calcCheckerXY(pointNumber, count, player) {
 	return result;
 }
 
+//Check for enter key pressed in online modal
+function onlineModalKeyPress(){
+  if (event.keyCode === 13) {
+    submitPlayerNames();
+  }
+}
 
 //Open the modal window to start a 2 player game
-function initiate2Player(){
-  var modal = document.getElementById('2PlayerModal');
+function initiateOnlineGame(){
+  var modal = document.getElementById('OnlineGameModal');
   modal.style.display = 'block';
 }
 
 //Retrieve player names and setup a 2 player game
 function submitPlayerNames(){
-  var modal = document.getElementById('2PlayerModal');
-  modal.style.display = 'none';
+  var notice;
+  var originalColor;
+  var modal = document.getElementById('OnlineGameModal');
   playerNames[1] = document.getElementById('Player1Input').value;
   playerNames[2] = document.getElementById('Player2Input').value;
-  localPlayer = 1;
-  firebaseData = firebase.database();
-  get2PlayerGameData(playerNames[1], playerNames[2]);
+  if (playerNames[1] && playerNames[2]) {
+    modal.style.display = 'none';
+    localPlayer = 1;
+    firebaseData = firebase.database();
+    get2PlayerGameData(playerNames[1], playerNames[2]);
+  }
+  else {
+    notice = document.getElementById('OnlineGameModalNotice');
+    originalColor = notice.style.color;
+    notice.style.color='red';
+    setTimeout(function(){
+      document.getElementById('OnlineGameModalNotice').style.color=originalColor;
+    }, 500);
+  }
 }
 
 //Get unique game id of 2 player game
