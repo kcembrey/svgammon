@@ -264,13 +264,13 @@ function initiateCheckers(player, countOfCheckers){
 
 //Function when checker is clicked
 function checkerClick() {
+  var point1;
+  var point2;
+  var point3;
   var checker = this;
 	var onPoint = checker.attributes.onPoint.value;
 	var checkerID = checker.id;
 	var player = parseFloat(checker.id.split('p')[1].split('c')[0]);
-	var point1;
-	var point2;
-  var point3;
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(diceValue[0]);
 	var numD2 = parseFloat(diceValue[1]);
@@ -278,7 +278,10 @@ function checkerClick() {
   var barPieceSelected = numOnPoint === barPoints[player];
   var canPlay = false;
   var canGoHome = false;
-  var topChecker = findTopChecker(numOnPoint);
+
+  //select the top checker on the point
+  checker = findTopChecker(numOnPoint);
+	checkerID = checker.id;
 
   //Only continue if it is the local player's turn
   if(!localPlayer || localPlayer === activePlayer){
@@ -297,11 +300,6 @@ function checkerClick() {
     //If a checker is not active and the selected checker belongs to the player, continue to check for available moves
     else if (!activeChecker || activePlayer === player) {
 
-      //Select the top checker on the point if this is not the top checker
-      if(topChecker != checker){
-        checkerClick(topChecker);
-        return false;
-      }
       //Set points and prerequisites for moves
     	if (player === 1) {
         canGoHome = points[19].checkers.length + points[20].checkers.length + points[21].checkers.length + points[22].checkers.length + points[23].checkers.length + points[24].checkers.length + points[25].checkers.length === 15;
@@ -523,25 +521,28 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 function rollDice() {
   var canPlay;
 
-  //Get random numbers for the dice
-	diceValue[0] = Math.floor((Math.random() * 6) + 1);
-	diceValue[1] = Math.floor((Math.random() * 6) + 1);
+  if (localPlayer === activePlayer) {
+    //Get random numbers for the dice
+  	diceValue[0] = Math.floor((Math.random() * 6) + 1);
+  	diceValue[1] = Math.floor((Math.random() * 6) + 1);
 
-  resetActive();
-	clearDice();
+    resetActive();
+  	clearDice();
 
-  //Populate the dots on the dice
-	populateDi(0, diceValue[0]);
-	populateDi(1, diceValue[1]);
+    //Populate the dots on the dice
+  	populateDi(0, diceValue[0]);
+  	populateDi(1, diceValue[1]);
 
-  //Verify there is a play with the new dice values
-  canPlay = verifyCanPlay();
+    //Verify there is a play with the new dice values
+    canPlay = verifyCanPlay();
 
-  //Show the dice if there is a play
-	showDice(canPlay, diceValue[0] === diceValue[1]);
+    //Show the dice if there is a play
+  	showDice(canPlay, diceValue[0] === diceValue[1]);
 
-  //Set the dice active if there is a play
-	diceActive = [canPlay, canPlay];
+    //Set the dice active if there is a play
+  	diceActive = [canPlay, canPlay];
+
+  }
 }
 
 //Populates/shows the relevant dots on a di
@@ -766,7 +767,6 @@ function get2PlayerGameData(player1Name, player2Name){
   var gameData;
   var createGame = true;
   var firebaseRef = firebaseData.ref();
-
   // Get current active games from Firebase
   firebaseRef.child('activeGames').orderByChild('combinedPlayerNames').equalTo(combinePlayerNames(player1Name, player2Name)).once('value', function(snapshot){
     snapshot.forEach(function(activeGame){
@@ -778,10 +778,6 @@ function get2PlayerGameData(player1Name, player2Name){
       }
       player1Name = gameData.player1;
       player2Name = gameData.player2;
-      activePlayer = gameData.activePlayer;
-      points = populate2PlayerPoints(gameData.points);
-      //Set player label to the active player
-      document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
     });
     if (createGame) {
       multiplayerGameID = firebaseRef.child('activeGames').push({
@@ -792,7 +788,6 @@ function get2PlayerGameData(player1Name, player2Name){
         'points':points.map(a => a.toJSON)
       }).key;
     }
-    repopulateCheckers(points);
     monitorForOpponentPlay();
   });
 }
@@ -828,6 +823,7 @@ function combinePlayerNames(player1Name, player2Name){
 function monitorForOpponentPlay(){
   var firebaseRef = firebaseData.ref('activeGames').child(multiplayerGameID);
   firebaseRef.on('value', function(snapshot){
+    playerCheckerCount = [0, 0, 0];
     gameData = snapshot.val();
     points = populate2PlayerPoints(gameData.points);
     activePlayer = gameData.activePlayer;
