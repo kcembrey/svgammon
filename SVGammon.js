@@ -31,6 +31,7 @@ var dice = [];
 var channel;
 var firebaseData;
 var localPlayer;
+var diceRolled = false;
 
 class boardPoint {
   constructor(id, checkerCount, player) {
@@ -95,6 +96,7 @@ class boardDi {
     this.active = false;
     this.dots = [];
     this.curValue = 0;
+    this.canPlay = false;
     this.double = false;
   }
 
@@ -146,12 +148,21 @@ class boardDi {
     this._dots = value;
   }
 
+  get canPlay() {
+    return this._canPlay;
+  }
+
+  set canPlay(value) {
+    this._canPlay = value;
+  }
+
   get toJSON() {
     return {
 			id: this._id,
       active: this._active,
       curValue: this._curValue,
-			player: this._double
+      canPlay: this._canPlay,
+			double: this._double
 		};
   }
 }
@@ -575,6 +586,7 @@ function removeCheckerFromArray(inputArray, checker){
 
 function changePlayers(){
     activePlayer = activePlayer === 1 ? 2 : 1;
+    diceRolled = false;
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
 }
 
@@ -614,33 +626,24 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 
 
 
-//Rolls the dice (Roll Dice button)
+//Rolls the dice
 function rollDice() {
   var canPlay;
 
   if (!localPlayer || localPlayer === activePlayer) {
     //Get random numbers for the dice
-  	dice[0].curValue = Math.floor((Math.random() * 6) + 1);
-  	dice[1].curValue = Math.floor((Math.random() * 6) + 1);
+    dice[0].curValue = Math.floor((Math.random() * 6) + 1);
+    dice[1].curValue = Math.floor((Math.random() * 6) + 1);
 
     hideDice();
     resetActive();
-
-    //Populate the dots on the dice
-  	populateDiceDots();
-
-    //Verify there is a play with the new dice values
-    canPlay = verifyCanPlay();
-
-    //Show the dice if there is a play
-  	showDice(canPlay, dice[0].curValue === dice[1].curValue);
-
-    //Set the dice active if there is a play
-  	diceActive = [canPlay, canPlay];
+    showDice(true);
 
     if (!canPlay) {
       changePlayers();
     }
+
+    update2PlayerGameData();
   }
 }
 
@@ -711,11 +714,19 @@ function updateDi(diNumber, double){
 }
 
 //Shows the dice based on whether the player has an available move and if it is a double
-function showDice(canPlay, double) {
+function showDice(update) {
+  //Verify there is a play with the new dice values
+  var canPlay = verifyCanPlay();
+  var double = dice[0].curValue === dice[1].curValue;
+  //Populate the dots on the dice
+  populateDiceDots();
+
   for (var i = 0; i < dice.length; i++) {
-    dice[i].double = double;
-    dice[i].active = canPlay;
-    $(dice[i].object).css('fill', canPlay ? (double ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
+    if (update) {
+      dice[i].double = double;
+      dice[i].active = canPlay;
+      $(dice[i].object).css('fill', canPlay ? (double ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
+    }
   	$(dice[i].object).css("visibility", "visible");
   }
 }
@@ -951,7 +962,8 @@ function get2PlayerGameData(p1Name, p2Name){
         'combinedPlayerNames':combinePlayerNames(p1Name, p2Name),
         'player1':p1Name,
         'player2':p2Name,
-        'points':points.map(a => a.toJSON)
+        'points':points.map(a => a.toJSON),
+        'dice':dice.map(a => a.toJSON)
       }).key;
     }
     monitorForOpponentPlay();
@@ -965,7 +977,8 @@ function update2PlayerGameData(){
     'combinedPlayerNames':combinePlayerNames(playerNames[1], playerNames[2]),
     'player1':playerNames[1],
     'player2':playerNames[2],
-    'points':points.map(a => a.toJSON)
+    'points':points.map(a => a.toJSON),
+    'dice':dice.map(a => a.toJSON)
   });
 }
 
@@ -985,7 +998,13 @@ function monitorForOpponentPlay(){
     points = populateBoardPoints(gameData.points);
     repopulateCheckers(points);
     activePlayer = gameData.activePlayer;
-    dice = gameData.dice;
+    dice[0].curValue = gameData.dice[0].curValue;
+    dice[1].curValue = gameData.dice[1].curValue;
+    dice[0].active = gameData.dice[0].active;
+    dice[1].active = gameData.dice[1].active;
+    dice[0].canPlay = gameData.dice[0].canPlay;
+    dice[1].canPlay = gameData.dice[1].canPlay;
+    showDice(false);
 
     //Set player label to the active player
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
