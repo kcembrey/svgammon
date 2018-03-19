@@ -24,7 +24,7 @@ var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
 var activeChecker;
 var activePlayer;
-var barPoints = [0,200,100];
+var barPoints = [0,27,26];
 var multiplayerGameID;
 var playerCheckerCount = [0,0,0];
 var dice = [];
@@ -318,7 +318,7 @@ function populateBoard() {
 	}
 
   //Populate bar point globals
-  for (i = 100; i <= barPoints[1]; i+= barPoints[2]) {
+  for (i = barPoints[2]; i <= barPoints[1]; i++) {
     pointData[i] = {
 			id: i,
       checkers: 0,
@@ -383,7 +383,7 @@ function checkerClick() {
   var playerOnBar = points[barPoints[player]].checkers.length > 0;
   var barPieceSelected = numOnPoint === barPoints[player];
   var canPlay = [false, false];
-  var canGoHome = false;
+  var canGoHome = verifyCanGoHome(player);
 
   //select the top checker on the point
   checker = findTopChecker(numOnPoint);
@@ -408,18 +408,19 @@ function checkerClick() {
 
       //Set points and prerequisites for moves
     	if (player === 1) {
-        canGoHome = points[19].checkers.length + points[20].checkers.length + points[21].checkers.length + points[22].checkers.length + points[23].checkers.length + points[24].checkers.length + points[25].checkers.length === 15;
         numOnPoint = barPieceSelected ? 0 : numOnPoint;
     		point1 = (numOnPoint + numD1);
     		point2 = (numOnPoint + numD2);
         point3 = (numOnPoint + numD1 + numD2);
     	} else {
-        canGoHome = points[0].checkers.length + points[1].checkers.length + points[2].checkers.length + points[3].checkers.length + points[4].checkers.length + points[5].checkers.length + points[6].checkers.length === 15;
         numOnPoint = barPieceSelected ? 25 : numOnPoint;
     		point1 = (numOnPoint - numD1);
     		point2 = (numOnPoint - numD2);
         point3 = (numOnPoint - numD1 - numD2);
     	}
+      point1 = point1 < 0 ? 0 : point1 > 25 ? 25 : point1;
+      point2 = point2 < 0 ? 0 : point2 > 25 ? 25 : point2;
+      point3 = point3 < 0 ? 0 : point3 > 25 ? 25 : point3;
 
       //Reset any active points
       resetActive();
@@ -554,8 +555,7 @@ function pointClick(checkerID, point, player) {
 
   //Change to alternate player if there are no dice  values left
   if (!dice[0].active && !dice[1].active){
-    activePlayer = activePlayer === 1 ? 2 : 1;
-    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+    changePlayers();
   }
   if (multiplayerGameID) {
     update2PlayerGameData();
@@ -571,6 +571,11 @@ function removeCheckerFromArray(inputArray, checker){
       inputArray.splice(i, 1);
     }
   }
+}
+
+function changePlayers(){
+    activePlayer = activePlayer === 1 ? 2 : 1;
+    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
 }
 
 //Moves a checker without specifying a clear board
@@ -633,6 +638,9 @@ function rollDice() {
     //Set the dice active if there is a play
   	diceActive = [canPlay, canPlay];
 
+    if (!canPlay) {
+      changePlayers();
+    }
   }
 }
 
@@ -679,22 +687,22 @@ function hideDiceDots() {
 
 //Updates the dice based on the current move
 function updateDice(moveDistance){
-  if (dice[0].active && moveDistance === dice[0].curValue && !dice[1].doubles){
-    updateDi(0, dice[0].doubles);
+  if (dice[0].active && moveDistance === dice[0].curValue && !dice[1].double){
+    updateDi(0, dice[0].double);
   }
   else if (moveDistance === dice[1].curValue) {
-    updateDi(1, dice[1].doubles);
+    updateDi(1, dice[1].double);
   }
   else {
-    updateDi(0, dice[0].doubles);
-    updateDi(1, dice[1].doubles);
+    updateDi(0, dice[0].double);
+    updateDi(1, dice[1].double);
   }
 }
 
 //Updates the specified di fill color and status
 function updateDi(diNumber, double){
   if (double) {
-    dice[diNumber].doubles = false;
+    dice[diNumber].double = false;
   }
   else {
     dice[diNumber].active = false;
@@ -703,42 +711,73 @@ function updateDi(diNumber, double){
 }
 
 //Shows the dice based on whether the player has an available move and if it is a double
-function showDice(canPlay, doubles) {
+function showDice(canPlay, double) {
   for (var i = 0; i < dice.length; i++) {
-    dice[i].double = doubles;
+    dice[i].double = double;
     dice[i].active = canPlay;
-    $(dice[i].object).css('fill', canPlay ? (doubles ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
+    $(dice[i].object).css('fill', canPlay ? (double ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
   	$(dice[i].object).css("visibility", "visible");
+  }
+}
+
+function verifyCanGoHome(player){
+  //Set points and prerequisites for moves
+  if (player === 1) {
+    return points[19].checkers.length + points[20].checkers.length + points[21].checkers.length + points[22].checkers.length + points[23].checkers.length + points[24].checkers.length + points[25].checkers.length === 15;
+  } else {
+    return points[0].checkers.length + points[1].checkers.length + points[2].checkers.length + points[3].checkers.length + points[4].checkers.length + points[5].checkers.length + points[6].checkers.length === 15;
   }
 }
 
 //Verifies the player has an available move to play
 function verifyCanPlay() {
-  var canPlay = true;
+  var result = false;
   var playerOnBar = points[barPoints[activePlayer]].checkers.length !== 0;
+  var d0Value = dice[0].curValue;
+  var d1Value = dice[1].curValue;
+  var homeOffset = activePlayer === 2 ? 25 : 0;
+  var canGoHome = verifyCanGoHome(activePlayer);
 
-  //Get the numbers/locations of the current points
-	var point1 = dice[0].curValue;
-	var point2 = dice[1].curValue;
 
-  //Player 2 needs their location relative to their home point (Player 1's home point is 0)
-  if (activePlayer === 2) {
-    point1 = 25 - point1;
-    point2 = 25 - point2;
-  }
 
   //If the player is on the bar, they can only play if the point is their own or has 0/1 pieces
   if (playerOnBar) {
-    canPlay = ((points[point1].player === activePlayer || points[point1].checkers.length <= 1)) || ((points[point2].player === activePlayer || points[point2].checkers.length <= 1));
+    result = ((points[d0Value - homeOffset].player === activePlayer || points[d0Value - homeOffset].checkers.length <= 1)) || ((points[d1Value - homeOffset].player === activePlayer || points[d1Value - homeOffset].checkers.length <= 1));
+  }
+  else {
+    for (var i = 0; i <= 25; i++) {
+      if (points[i].player === activePlayer) {
+        if (checkForMove(activePlayer, activePlayer === 1 ? i + d0Value : i - d0Value, canGoHome)){
+          return true;
+        }
+        if (checkForMove(activePlayer, activePlayer === 1 ? i + d1Value : i - d1Value, canGoHome)){
+          return true;
+        }
+      }
+    }
   }
 
-  return canPlay;
+  return result;
+}
+
+function checkForMove(player, pointNumber, canGoHome){
+  var point;
+  if (25 >= pointNumber >= 0) {
+    point = points[pointNumber];
+    if (point && (point.player === player || point.player === 0)) {
+      return true;
+    }
+  }
+  else if (canGoHome) {
+    return true;
+  }
+  return false;
 }
 
 //Collapses the checkers on a point
 function adjustCheckers(pointNumber){
   //Collapse the checkers on the current point if there are more than 5 total
-  if (pointNumber && points[pointNumber].checkers.length > 5) {
+  if (pointNumber !== null && points[pointNumber].checkers.length > 5) {
   //Find all non-collapsed checkers on this point
     $("[onPoint=" + pointNumber +"][collapsed!='true']").each(function() {
       //Calculate the new y coordinate of the checker
@@ -946,6 +985,7 @@ function monitorForOpponentPlay(){
     points = populateBoardPoints(gameData.points);
     repopulateCheckers(points);
     activePlayer = gameData.activePlayer;
+    dice = gameData.dice;
 
     //Set player label to the active player
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
