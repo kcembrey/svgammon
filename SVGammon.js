@@ -1,8 +1,6 @@
 /*jshint esversion: 6 */
 
 var points = [];
-var diceActive;
-var diceDoubles;
 var doubleDiceFill = 'orangered';
 var singleDiceFill = 'orange';
 var emptyDiceFill = 'white';
@@ -29,7 +27,7 @@ var activePlayer;
 var barPoints = [0,200,100];
 var multiplayerGameID;
 var playerCheckerCount = [0,0,0];
-var diceValue = [0,0];
+var dice = [];
 var channel;
 var firebaseData;
 var localPlayer;
@@ -46,7 +44,7 @@ class boardPoint {
   }
 
   set id(value) {
-      this._id = value;
+    this._id = value;
   }
 
   get checkers() {
@@ -54,7 +52,23 @@ class boardPoint {
   }
 
   set checkers(value) {
-      this._checkers = value;
+    this._checkers = value;
+  }
+
+  get object() {
+    return this._object;
+  }
+
+  set object(value) {
+    this._object = value;
+  }
+
+  get dots() {
+    return this._dots;
+  }
+
+  set dots(value) {
+    this._dots = value;
   }
 
   get player() {
@@ -62,7 +76,7 @@ class boardPoint {
   }
 
   set player(value) {
-      this._player = value;
+    this._player = value;
   }
 
   get toJSON() {
@@ -74,6 +88,73 @@ class boardPoint {
   }
 }
 
+class boardDi {
+  constructor(id, object) {
+    this.id = id;
+    this.object = object;
+    this.active = false;
+    this.dots = [];
+    this.curValue = 0;
+    this.double = false;
+  }
+
+  get id() {
+    return this._id;
+  }
+
+  set id(value) {
+    this._id = value;
+  }
+
+  get curValue() {
+    return this._curValue;
+  }
+
+  set curValue(value) {
+    this._curValue = value;
+  }
+
+  get double() {
+    return this._double;
+  }
+
+  set double(value) {
+    this._double = value;
+  }
+
+  get active() {
+    return this._active;
+  }
+
+  set active(value) {
+    this._active = value;
+  }
+
+  get object() {
+    return this._object;
+  }
+
+  set object(value) {
+    this._object = value;
+  }
+
+  get dots() {
+    return this._dots;
+  }
+
+  set dots(value) {
+    this._dots = value;
+  }
+
+  get toJSON() {
+    return {
+			id: this._id,
+      active: this._active,
+      curValue: this._curValue,
+			player: this._double
+		};
+  }
+}
 
 
 populateBoard();
@@ -93,11 +174,11 @@ function initiate(){
   var element;
 
   //Create Dice SVG objects
-  for (i = 1; i <= 7; i++) {
-    dx = di === 0 ? (i === 7 ? '130' : (isEven(i)  ? '141' : '119') ) : (i === 7 ? '190' : (isEven(i)  ? '201' : '179') );
-    dy = i <= 2 ? 294 : ( i <= 4 ? 305 : ( i <= 6 ? 316 : 305));
+  for (i = 0; i <= 6; i++) {
+    dx = di === 0 ? (i === 6 ? '130' : (isEven(i)  ? '119' : '141') ) : (i === 6 ? '190' : (isEven(i)  ? '179' : '201') );
+    dy = i <= 1 ? 294 : ( i <= 3 ? 305 : ( i <= 5 ? 316 : 305));
 
-    if (i === 1){
+    if (i === 0){
       rx = di === 0 ? '110' : '170';
       rect = document.createElementNS(svgns, 'rect');
       rect.setAttributeNS(null, 'id', 'd' + di);
@@ -109,6 +190,7 @@ function initiate(){
       rect.setAttributeNS(null, 'x', rx);
       rect.setAttributeNS(null, 'y', '285');
       document.getElementById('svgObj').appendChild(rect);
+      dice[di] = new boardDi(di, rect);
     }
     dot = document.createElementNS(svgns, 'circle');
     dot.setAttributeNS(null, 'id', 'd' + di + 'd' + i);
@@ -119,10 +201,11 @@ function initiate(){
     dot.setAttributeNS(null, 'cx', dx);
     dot.setAttributeNS(null, 'cy', dy);
     document.getElementById('svgObj').appendChild(dot);
+    dice[di].dots[i] = dot;
 
     //Loop through again for second di
-    if (di === 0 && i === 7) {
-      i = 0;
+    if (di === 0 && i === 6) {
+      i = -1;
       di = 1;
     }
   }
@@ -185,8 +268,10 @@ function populateBoard() {
   //Reset global variables
   activePlayer = 1;
   activeChecker = null;
-  diceActive = [false, false];
-  diceDoubles = [false, false];
+  dice[0].active = false;
+  dice[1].active = false;
+  dice[0].double = false;
+  dice[1].double = false;
   hotpoint1 = 0;
   hotpoint2 = 0;
   hotpoint3 = 0;
@@ -293,8 +378,8 @@ function checkerClick() {
 	var checkerID = checker.id;
 	var player = parseFloat(checker.id.split('p')[1].split('c')[0]);
 	var numOnPoint = parseFloat(onPoint);
-	var numD1 = parseFloat(diceValue[0]);
-	var numD2 = parseFloat(diceValue[1]);
+	var numD1 = parseFloat(dice[0].curValue);
+	var numD2 = parseFloat(dice[1].curValue);
   var playerOnBar = points[barPoints[player]].checkers.length > 0;
   var barPieceSelected = numOnPoint === barPoints[player];
   var canPlay = [false, false];
@@ -343,7 +428,7 @@ function checkerClick() {
       if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
       {
         //Checks for an available move using the first di and activates the relevant point
-      	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
+      	if (dice[0].active && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
           canPlay[0] = true;
           hotpoint1 = 't' + point1;
       		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
@@ -353,7 +438,7 @@ function checkerClick() {
       	}
 
         //Checks for an available move using the second di and activates the relevant point
-      	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
+      	if (dice[1].active && (!dice[0].active || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
           canPlay[1] = true;
           hotpoint2 = 't' + point2;
       		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
@@ -363,7 +448,7 @@ function checkerClick() {
       	}
 
         //Checks for an available move using both dice and activates the relevant point
-        if ((canPlay[0] || canPlay[1]) && diceActive[0] && diceActive[1] && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
+        if ((canPlay[0] || canPlay[1]) && dice[0].active && dice[1].active && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
           hotpoint3 = 't' + point3;
       		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
       		$('#t' + point3).click(function () {
@@ -446,7 +531,7 @@ function pointNumber(point) {
 
 //Returns true if parameter is even
 function isEven(n) {
-	return parseFloat(n) && (n % 2 == 0);
+	return parseFloat(n) % 2 == 0;
 }
 
 //Function for when a point is clicked
@@ -468,7 +553,7 @@ function pointClick(checkerID, point, player) {
   repopulateCheckers(points);
 
   //Change to alternate player if there are no dice  values left
-  if (!diceActive[0] && !diceActive[1]){
+  if (!dice[0].active && !dice[1].active){
     activePlayer = activePlayer === 1 ? 2 : 1;
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
   }
@@ -530,21 +615,20 @@ function rollDice() {
 
   if (!localPlayer || localPlayer === activePlayer) {
     //Get random numbers for the dice
-  	diceValue[0] = Math.floor((Math.random() * 6) + 1);
-  	diceValue[1] = Math.floor((Math.random() * 6) + 1);
+  	dice[0].curValue = Math.floor((Math.random() * 6) + 1);
+  	dice[1].curValue = Math.floor((Math.random() * 6) + 1);
 
+    hideDice();
     resetActive();
-  	clearDice();
 
     //Populate the dots on the dice
-  	populateDi(0, diceValue[0]);
-  	populateDi(1, diceValue[1]);
+  	populateDiceDots();
 
     //Verify there is a play with the new dice values
     canPlay = verifyCanPlay();
 
     //Show the dice if there is a play
-  	showDice(canPlay, diceValue[0] === diceValue[1]);
+  	showDice(canPlay, dice[0].curValue === dice[1].curValue);
 
     //Set the dice active if there is a play
   	diceActive = [canPlay, canPlay];
@@ -553,71 +637,79 @@ function rollDice() {
 }
 
 //Populates/shows the relevant dots on a di
-function populateDi(di, number) {
-	if (number == 1 || number == 3 || number == 5) {
-		$("#d" + di + "d7").css("visibility", "visible");
-	}
-	if (number >= 2) {
-		$("#d" + di + "d1").css("visibility", "visible");
-		$("#d" + di + "d6").css("visibility", "visible");
-	}
-	if (number >= 4) {
-		$("#d" + di + "d2").css("visibility", "visible");
-		$("#d" + di + "d5").css("visibility", "visible");
-	}
-	if (number == 6) {
-		$("#d" + di + "d3").css("visibility", "visible");
-		$("#d" + di + "d4").css("visibility", "visible");
-	}
+function populateDiceDots() {
+  var diValue;
+
+  for (var i = 0; i < dice.length; i++) {
+    diValue = dice[i].curValue;
+  	if (diValue === 1 || diValue === 3 || diValue === 5) {
+      var dot = dice[i].dots[6];
+  		dice[i].dots[6].style.visibility = 'visible';
+  	}
+  	if (diValue >= 2) {
+  		dice[i].dots[0].style.visibility = 'visible';
+    	dice[i].dots[5].style.visibility = 'visible';
+  	}
+  	if (diValue >= 4) {
+  		dice[i].dots[1].style.visibility = 'visible';
+    	dice[i].dots[4].style.visibility = 'visible';
+  	}
+  	if (diValue === 6) {
+  		dice[i].dots[2].style.visibility = 'visible';
+    	dice[i].dots[3].style.visibility = 'visible';
+  	}
+  }
 }
 
 //Hides the dice
 function hideDice() {
-	$("#d0").css("visibility", "hidden");
-	$("#d1").css("visibility", "hidden");
-	clearDice();
+  dice[0].object.style.visibility = 'hidden';
+  dice[1].object.style.visibility = 'hidden';
+	hideDiceDots();
 }
 
 //Clears the dots on the dice
-function clearDice() {
-	for (i = 1; i <= 7; i++) {
-		$("#d0d" + i).css("visibility", "hidden");
-		$("#d1d" + i).css("visibility", "hidden");
+function hideDiceDots() {
+  for (var i = 0; i < dice.length; i++) {
+  	for (var dot = 0; dot < dice[i].dots.length; dot++) {
+      dice[i].dots[dot].style.visibility = 'hidden';
+    }
 	}
 }
 
 //Updates the dice based on the current move
 function updateDice(moveDistance){
-  if (diceActive[0] && moveDistance === diceValue[0] && !diceDoubles[1]){
-    updateDi(0, diceDoubles[0]);
+  if (dice[0].active && moveDistance === dice[0].curValue && !dice[1].doubles){
+    updateDi(0, dice[0].doubles);
   }
-  else if (moveDistance === diceValue[1]) {
-    updateDi(1, diceDoubles[1]);
+  else if (moveDistance === dice[1].curValue) {
+    updateDi(1, dice[1].doubles);
   }
   else {
-    updateDi(0, diceDoubles[0]);
-    updateDi(1, diceDoubles[1]);
+    updateDi(0, dice[0].doubles);
+    updateDi(1, dice[1].doubles);
   }
 }
 
 //Updates the specified di fill color and status
 function updateDi(diNumber, double){
   if (double) {
-    diceDoubles[diNumber] = false;
+    dice[diNumber].doubles = false;
   }
   else {
-    diceActive[diNumber] = false;
+    dice[diNumber].active = false;
   }
-  $('#d' + diNumber).css('fill', double ? singleDiceFill : emptyDiceFill);
+  $(dice[diNumber].object).css('fill', double ? singleDiceFill : emptyDiceFill);
 }
 
 //Shows the dice based on whether the player has an available move and if it is a double
 function showDice(canPlay, doubles) {
-  diceDoubles = [doubles,doubles];
-  $("#d0").css('fill', canPlay ? (doubles ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
-	$("#d0").css("visibility", "visible");
-  $("#d1").css('fill', canPlay ? (doubles ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
-	$("#d1").css("visibility", "visible");
+  for (var i = 0; i < dice.length; i++) {
+    dice[i].double = doubles;
+    dice[i].active = canPlay;
+    $(dice[i].object).css('fill', canPlay ? (doubles ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
+  	$(dice[i].object).css("visibility", "visible");
+  }
 }
 
 //Verifies the player has an available move to play
@@ -626,8 +718,8 @@ function verifyCanPlay() {
   var playerOnBar = points[barPoints[activePlayer]].checkers.length !== 0;
 
   //Get the numbers/locations of the current points
-	var point1 = diceValue[0];
-	var point2 = diceValue[1];
+	var point1 = dice[0].curValue;
+	var point2 = dice[1].curValue;
 
   //Player 2 needs their location relative to their home point (Player 1's home point is 0)
   if (activePlayer === 2) {
@@ -635,7 +727,7 @@ function verifyCanPlay() {
     point2 = 25 - point2;
   }
 
-  // TODO: If the player is on the bar, they can only play if the point is their own or has 0/1 pieces
+  //If the player is on the bar, they can only play if the point is their own or has 0/1 pieces
   if (playerOnBar) {
     canPlay = ((points[point1].player === activePlayer || points[point1].checkers.length <= 1)) || ((points[point2].player === activePlayer || points[point2].checkers.length <= 1));
   }
