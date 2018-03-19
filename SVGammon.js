@@ -297,7 +297,7 @@ function checkerClick() {
 	var numD2 = parseFloat(diceValue[1]);
   var playerOnBar = points[barPoints[player]].checkers.length > 0;
   var barPieceSelected = numOnPoint === barPoints[player];
-  var canPlay = false;
+  var canPlay = [false, false];
   var canGoHome = false;
 
   //select the top checker on the point
@@ -344,7 +344,7 @@ function checkerClick() {
       {
         //Checks for an available move using the first di and activates the relevant point
       	if (diceActive[0] && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
-          canPlay = true;
+          canPlay[0] = true;
           hotpoint1 = 't' + point1;
       		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
       		$('#t' + point1).click(function () {
@@ -354,7 +354,7 @@ function checkerClick() {
 
         //Checks for an available move using the second di and activates the relevant point
       	if (diceActive[1] && (!diceActive[0] || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
-          canPlay = true;
+          canPlay[1] = true;
           hotpoint2 = 't' + point2;
       		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
       		$('#t' + point2).click(function () {
@@ -363,8 +363,7 @@ function checkerClick() {
       	}
 
         //Checks for an available move using both dice and activates the relevant point
-        if (diceActive[0] && diceActive[1] && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
-          canPlay = true;
+        if ((canPlay[0] || canPlay[1]) && diceActive[0] && diceActive[1] && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
           hotpoint3 = 't' + point3;
       		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
       		$('#t' + point3).click(function () {
@@ -374,7 +373,7 @@ function checkerClick() {
       }
 
       //Activates the selected checker if there is a valid move
-      if (canPlay) {
+      if (canPlay[0] || canPlay[1]) {
         activeChecker = checker;
         $(checker).attr('fill', activeCheckerFill);
       }
@@ -463,20 +462,7 @@ function pointClick(checkerID, point, player) {
   //Gets the distance between the checker point and the new point
   var distance = Math.abs(checkerPoint - pointNumber(point));
 
-  //Point selected uses both dice values
-  if (parseFloat(diceValue[0]) + parseFloat(diceValue[1])  === distance) {
-    updateDi(0);
-    updateDi(1);
-  }
-
-  //Point selected uses first di value
-	else if (diceActive[0] && diceValue[0] == distance) {
-    updateDi(0);
-
-  //Point selected uses second di value
-	} else {
-    updateDi(1);
-	}
+  updateDice(distance);
 
   checkForWin();
   repopulateCheckers(points);
@@ -600,20 +586,29 @@ function clearDice() {
 	}
 }
 
-//Updates the fill color of a di
-function updateDi(diNumber){
-
-  //If the di is currently a double, set it to a single
-  if (diceDoubles[diNumber]) {
-    diceDoubles[diNumber] = false;
-    $('#d' + diNumber).css('fill', singleDiceFill);
+//Updates the dice based on the current move
+function updateDice(moveDistance){
+  if (diceActive[0] && moveDistance === diceValue[0] && !diceDoubles[1]){
+    updateDi(0, diceDoubles[0]);
   }
+  else if (moveDistance === diceValue[1]) {
+    updateDi(1, diceDoubles[1]);
+  }
+  else {
+    updateDi(0, diceDoubles[0]);
+    updateDi(1, diceDoubles[1]);
+  }
+}
 
-  //If the di is currently a single, set it to inactive
+//Updates the specified di fill color and status
+function updateDi(diNumber, double){
+  if (double) {
+    diceDoubles[diNumber] = false;
+  }
   else {
     diceActive[diNumber] = false;
-    $('#d' + diNumber).css('fill', emptyDiceFill);
   }
+  $('#d' + diNumber).css('fill', double ? singleDiceFill : emptyDiceFill);
 }
 
 //Shows the dice based on whether the player has an available move and if it is a double
