@@ -153,7 +153,7 @@ class boardDi {
 
   set active(value) {
     this._active = value;
-    this._object.style.fill = value ? singleDiceFill : emptyDiceFill;
+    this._object.style.fill = value ? this._object.style.fill : emptyDiceFill;
   }
 
   get object() {
@@ -233,7 +233,6 @@ function initiate(){
       rect.setAttributeNS(null, 'id', 'd' + di);
       rect.setAttributeNS(null, 'stroke', 'black');
       rect.setAttributeNS(null, 'stroke-width', '1');
-      rect.setAttributeNS(null, 'fill', singleDiceFill);
       rect.setAttributeNS(null, 'width', '40');
       rect.setAttributeNS(null, 'height', '40');
       rect.setAttributeNS(null, 'x', rx);
@@ -317,10 +316,12 @@ function populateBoard() {
   //Reset global variables
   activePlayer = 1;
   activeChecker = null;
-  dice[0].active = false;
-  dice[1].active = false;
+  dice[0].curValue = 0;
+  dice[1].curValue = 0;
   dice[0].double = false;
   dice[1].double = false;
+  dice[0].active = false;
+  dice[1].active = false;
   hotpoint1 = 0;
   hotpoint2 = 0;
   hotpoint3 = 0;
@@ -374,9 +375,6 @@ function populateBoard() {
 			player: 0
 		};
   }
-
-  //Hide the dice
-	hideDice();
 
   points = populateBoardPoints(pointData);
   repopulateCheckers(points);
@@ -676,35 +674,20 @@ function rollDice() {
     dice[0].curValue = Math.floor((Math.random() * 6) + 1);
     dice[1].curValue = Math.floor((Math.random() * 6) + 1);
 
-    hideDice();
     resetActive();
-    showDice(true);
+
+    //Verify there is a play with the new dice values
+    canPlay = verifyCanPlay();
+
+    //Set dice active and doubles values
+    dice[0].double = dice[0].curValue === dice[1].curValue;
+    dice[1].double = dice[0].curValue === dice[1].curValue;
+    dice[0].active = canPlay;
+    dice[1].active = canPlay;
 
     if (multiplayerGameID) {
       update2PlayerGameData();
     }
-  }
-}
-
-//Hides the dice
-function hideDice() {
-  dice[0].hide();
-  dice[1].hide();
-}
-
-//Shows the dice based on whether the player has an available move and if it is a double
-function showDice(update) {
-  //Verify there is a play with the new dice values
-  var canPlay = verifyCanPlay();
-  var double = dice[0].curValue === dice[1].curValue;
-
-  for (var i = 0; i < dice.length; i++) {
-    if (update) {
-      dice[i].double = double;
-      dice[i].active = canPlay;
-      $(dice[i].object).css('fill', canPlay ? (double ? doubleDiceFill : singleDiceFill) : emptyDiceFill);
-    }
-  	$(dice[i].object).css("visibility", "visible");
   }
 }
 
@@ -810,7 +793,6 @@ function checkForWin(){
   var wonGame = activePlayer === 1 ? points[25].checkers.length === 15 : points[0].checkers.length === 15;
   if (wonGame) {
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer] + ' WON THE GAME!!!';
-    hideDice();
   }
   return wonGame;
 }
@@ -977,6 +959,8 @@ function monitorForOpponentPlay(){
     activePlayer = gameData.activePlayer;
     dice[0].curValue = gameData.dice[0].curValue;
     dice[1].curValue = gameData.dice[1].curValue;
+    dice[0].double = gameData.dice[0].double;
+    dice[1].double = gameData.dice[1].double;
     dice[0].active = gameData.dice[0].active;
     dice[1].active = gameData.dice[1].active;
     dice[0].canPlay = gameData.dice[0].canPlay;
