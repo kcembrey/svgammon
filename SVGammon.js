@@ -678,6 +678,8 @@ function changePlayers() {
 	diceRolled = false;
 	document.getElementById('playerLabel')
 		.innerHTML = activePlayer.name;
+  document.getElementById('PlayerNotificationModalNotice').innerHTML = activePlayer.name + 's turn!';
+  document.getElementById('PlayerNotificationModal').style.display = 'block';
 }
 
 //Moves a checker without specifying a clear board
@@ -1076,4 +1078,9 @@ function spinBoard(multiplier) {
       }, 10);
     }, 1000);
   }
+}
+
+
+function submitPlayerNotificationModal(){
+    document.getElementById('PlayerNotificationModal').style.display = 'none';
 }
