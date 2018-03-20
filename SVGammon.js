@@ -368,33 +368,33 @@ function populateBoard() {
 	for (i = 0; i <= 25; i++) {
 		switch (i) {
 		case 1:
-			player = players[1];
+			player = 1;
 			checkers = 2;
 			break;
 		case 6:
 		case 13:
-			player = players[2];
+			player = 2;
 			checkers = 5;
 			break;
 		case 8:
-			player = players[2];
+			player = 2;
 			checkers = 3;
 			break;
 		case 12:
 		case 19:
-			player = players[1];
+			player = 1;
 			checkers = 5;
 			break;
 		case 17:
-			player = players[1];
+			player = 1;
 			checkers = 3;
 			break;
 		case 24:
-			player = players[2];
+			player = 2;
 			checkers = 2;
 			break;
 		default:
-			player = players[0];
+			player = 0;
 			checkers = 0;
 		}
 		pointData[i] = {
@@ -409,7 +409,7 @@ function populateBoard() {
 		pointData[i] = {
 			id: i,
 			checkers: 0,
-			player: players[0]
+			player: 0
 		};
 	}
 
@@ -425,7 +425,7 @@ function populateBoardPoints(pointData) {
 	var result = [];
 	playerCheckerCount = [0, 0, 0];
 	for (var key in pointData) {
-		result[pointData[key].id] = (new boardPoint(pointData[key].id, pointData[key].checkers, pointData[key].player));
+		result[pointData[key].id] = (new boardPoint(pointData[key].id, pointData[key].checkers, players[pointData[key].player]));
 	}
 	return result;
 }
@@ -984,6 +984,9 @@ function get2PlayerGameData(p1Name, p2Name) {
 					localPlayer = players[2];
 					flipBoard();
 				}
+        else {
+          spinBoard(2);
+        }
 				players[1].name = gameData.player1;
 				players[2].name = gameData.player2;
 			});
@@ -1007,7 +1010,7 @@ function update2PlayerGameData() {
 	//write the game data to the server
 	firebaseData.ref('activeGames/' + multiplayerGameID)
 		.set({
-			'activePlayer': activePlayer.toJSON,
+			'activePlayer': activePlayer.id,
 			'combinedPlayerNames': combinePlayerNames(players[1].name, players[2].name),
 			'player1': players[1].name,
 			'player2': players[2].name,
@@ -1032,7 +1035,7 @@ function monitorForOpponentPlay() {
 		gameData = snapshot.val();
 		points = populateBoardPoints(gameData.points);
 		repopulateCheckers(points);
-		activePlayer = gameData.activePlayer;
+		activePlayer = players[gameData.activePlayer];
 		dice[0].curValue = gameData.dice[0].curValue;
 		dice[1].curValue = gameData.dice[1].curValue;
 		dice[0].double = gameData.dice[0].double;
@@ -1056,4 +1059,21 @@ function flipBoard() {
 	} else {
 		svgContainer.style.webkitTransform = '';
 	}
+}
+
+function spinBoard(multiplier) {
+	var svgContainer = document.getElementById('svgObj');
+	var currentTransform = svgContainer.style.webkitTransform;
+	if (multiplier > 0 && currentTransform === '') {
+    svgContainer.style.transition = '.5s';
+		svgContainer.style.webkitTransform = 'rotate(360deg)';
+    setTimeout(function () {
+  		svgContainer.style.transition = '0s';
+  		svgContainer.style.webkitTransform = '';
+      setTimeout(function () {
+    		svgContainer.style.transition = '.5s';
+        spinBoard(multiplier - 1);
+      }, 10);
+    }, 1000);
+  }
 }
