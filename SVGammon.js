@@ -114,6 +114,28 @@ class boardDi {
 
   set curValue(value) {
     this._curValue = value;
+
+    //hide all dots on di
+    this._dots.forEach(function(dot) {
+      dot.style.visibility = 'hidden';
+    });
+
+    //show relevant dots from value
+  	if (value === 1 || value === 3 || value === 5) {
+  		this._dots[6].style.visibility = 'visible';
+  	}
+  	if (value >= 2) {
+  		this._dots[0].style.visibility = 'visible';
+    	this._dots[5].style.visibility = 'visible';
+  	}
+  	if (value >= 4) {
+  		this._dots[1].style.visibility = 'visible';
+    	this._dots[4].style.visibility = 'visible';
+  	}
+  	if (value === 6) {
+  		this._dots[2].style.visibility = 'visible';
+    	this._dots[3].style.visibility = 'visible';
+  	}
   }
 
   get double() {
@@ -122,6 +144,7 @@ class boardDi {
 
   set double(value) {
     this._double = value;
+    this._object.style.fill = value ? doubleDiceFill : singleDiceFill;
   }
 
   get active() {
@@ -130,6 +153,7 @@ class boardDi {
 
   set active(value) {
     this._active = value;
+    this._object.style.fill = value ? singleDiceFill : emptyDiceFill;
   }
 
   get object() {
@@ -154,6 +178,20 @@ class boardDi {
 
   set canPlay(value) {
     this._canPlay = value;
+  }
+
+  play(){
+    //Updates the specified di fill color and status
+    if (this._double) {
+      this.double = false;
+    }
+    else {
+      this.active = false;
+    }
+  }
+
+  hide(){
+    this._object.style.visiblity = 'hidden';
   }
 
   get toJSON() {
@@ -370,6 +408,7 @@ function initiateCheckers(player, countOfCheckers){
       checker.setAttributeNS(null, 'stroke', 'black');
       checker.setAttributeNS(null, 'stroke-width', '1');
       checker.setAttributeNS(null, 'fill', checkerFill[player]);
+      checker.style.transition = '.5s';
       document.getElementById('svgObj').appendChild(checker);
       checker.addEventListener('click', checkerClick);
     }
@@ -445,7 +484,7 @@ function checkerClick() {
           hotpoint1 = 't' + point1;
       		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
       		$('#t' + point1).click(function () {
-      				pointClick(checkerID, document.getElementById('t' + point1), player);
+      				pointClick(checkerID, document.getElementById('t' + point1), player, [dice[0]]);
       			});
       	}
 
@@ -455,7 +494,7 @@ function checkerClick() {
           hotpoint2 = 't' + point2;
       		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
       		$('#t' + point2).click(function () {
-      				pointClick(checkerID, document.getElementById('t' + point2), player);
+      				pointClick(checkerID, document.getElementById('t' + point2), player, [dice[1]]);
       			});
       	}
 
@@ -464,7 +503,7 @@ function checkerClick() {
           hotpoint3 = 't' + point3;
       		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
       		$('#t' + point3).click(function () {
-      				pointClick(checkerID, document.getElementById('t' + point3), player);
+      				pointClick(checkerID, document.getElementById('t' + point3), player, [dice[0],dice[1]]);
       			});
       	}
       }
@@ -547,7 +586,7 @@ function isEven(n) {
 }
 
 //Function for when a point is clicked
-function pointClick(checkerID, point, player) {
+function pointClick(checkerID, point, player, diceUsed) {
   var checkerPoint = document.getElementById(checkerID).getAttribute('onPoint');
 
   //Moves the checker to its new point
@@ -559,7 +598,9 @@ function pointClick(checkerID, point, player) {
   //Gets the distance between the checker point and the new point
   var distance = Math.abs(checkerPoint - pointNumber(point));
 
-  updateDice(distance);
+  diceUsed.forEach(function(di){
+    di.play();
+  });
 
   checkForWin();
   repopulateCheckers(points);
@@ -639,78 +680,16 @@ function rollDice() {
     resetActive();
     showDice(true);
 
-    if (!canPlay) {
-      changePlayers();
+    if (multiplayerGameID) {
+      update2PlayerGameData();
     }
-
-    update2PlayerGameData();
-  }
-}
-
-//Populates/shows the relevant dots on a di
-function populateDiceDots() {
-  var diValue;
-
-  for (var i = 0; i < dice.length; i++) {
-    diValue = dice[i].curValue;
-  	if (diValue === 1 || diValue === 3 || diValue === 5) {
-      var dot = dice[i].dots[6];
-  		dice[i].dots[6].style.visibility = 'visible';
-  	}
-  	if (diValue >= 2) {
-  		dice[i].dots[0].style.visibility = 'visible';
-    	dice[i].dots[5].style.visibility = 'visible';
-  	}
-  	if (diValue >= 4) {
-  		dice[i].dots[1].style.visibility = 'visible';
-    	dice[i].dots[4].style.visibility = 'visible';
-  	}
-  	if (diValue === 6) {
-  		dice[i].dots[2].style.visibility = 'visible';
-    	dice[i].dots[3].style.visibility = 'visible';
-  	}
   }
 }
 
 //Hides the dice
 function hideDice() {
-  dice[0].object.style.visibility = 'hidden';
-  dice[1].object.style.visibility = 'hidden';
-	hideDiceDots();
-}
-
-//Clears the dots on the dice
-function hideDiceDots() {
-  for (var i = 0; i < dice.length; i++) {
-  	for (var dot = 0; dot < dice[i].dots.length; dot++) {
-      dice[i].dots[dot].style.visibility = 'hidden';
-    }
-	}
-}
-
-//Updates the dice based on the current move
-function updateDice(moveDistance){
-  if (dice[0].active && moveDistance === dice[0].curValue && !dice[1].double){
-    updateDi(0, dice[0].double);
-  }
-  else if (moveDistance === dice[1].curValue) {
-    updateDi(1, dice[1].double);
-  }
-  else {
-    updateDi(0, dice[0].double);
-    updateDi(1, dice[1].double);
-  }
-}
-
-//Updates the specified di fill color and status
-function updateDi(diNumber, double){
-  if (double) {
-    dice[diNumber].double = false;
-  }
-  else {
-    dice[diNumber].active = false;
-  }
-  $(dice[diNumber].object).css('fill', double ? singleDiceFill : emptyDiceFill);
+  dice[0].hide();
+  dice[1].hide();
 }
 
 //Shows the dice based on whether the player has an available move and if it is a double
@@ -718,8 +697,6 @@ function showDice(update) {
   //Verify there is a play with the new dice values
   var canPlay = verifyCanPlay();
   var double = dice[0].curValue === dice[1].curValue;
-  //Populate the dots on the dice
-  populateDiceDots();
 
   for (var i = 0; i < dice.length; i++) {
     if (update) {
@@ -1004,7 +981,6 @@ function monitorForOpponentPlay(){
     dice[1].active = gameData.dice[1].active;
     dice[0].canPlay = gameData.dice[0].canPlay;
     dice[1].canPlay = gameData.dice[1].canPlay;
-    showDice(false);
 
     //Set player label to the active player
     document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
