@@ -10,9 +10,6 @@ var hotpoint2;
 var hotpoint3;
 var element;
 var initiated = false;
-var playerNames = [null, 1, 2];
-var player1Name = 1;
-var player2Name = 2;
 var checkerFill = ['','black','brown'];
 var activeCheckerFill = 'purple';
 var noPlayCheckerFill = 'maroon';
@@ -24,7 +21,6 @@ var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
 var activeChecker;
 var activePlayer;
-var barPoints = [0,27,26];
 var multiplayerGameID;
 var playerCheckerCount = [0,0,0];
 var dice = [];
@@ -32,7 +28,44 @@ var channel;
 var firebaseData;
 var localPlayer;
 var diceRolled = false;
+var players;
 
+class boardPlayer {
+  constructor(id, barPoint){
+    this.id = id;
+    this.name = id.toString();
+    this._barPoint = barPoint;
+  }
+
+  set id(value){
+    this._value = value;
+  }
+
+  get id(){
+    return this._value;
+  }
+
+  set name(value){
+    this._name = value;
+  }
+
+  get name(){
+    return this._name;
+  }
+
+  get barPoint(){
+    return this._barPoint;
+  }
+
+  calculatePoint(pointNumber, value) {
+    if (this._id === 1) {
+      return value;
+    }
+    else{
+      return pointNumber - value;
+    }
+  }
+}
 class boardPoint {
   constructor(id, checkerCount, player) {
     this.id = id;
@@ -84,7 +117,7 @@ class boardPoint {
     return {
 			id: this._id,
       checkers: this._checkers.length,
-			player: this._player
+			player: this._player.id
 		};
   }
 }
@@ -215,12 +248,13 @@ function initiate(){
   var checker;
   var di = 0;
   var dot;
-  var player = 1;
   var cx;
   var cy;
   var rx;
   var svgns = 'http://www.w3.org/2000/svg';
   var element;
+
+  players = [new boardPlayer (0, 1000),new boardPlayer(1, 27),new boardPlayer(2, 26)];
 
   //Create Dice SVG objects
   for (i = 0; i <= 6; i++) {
@@ -314,7 +348,7 @@ function populateBoard() {
   }
 
   //Reset global variables
-  activePlayer = 1;
+  activePlayer = players[1];
   activeChecker = null;
   dice[0].curValue = 0;
   dice[1].curValue = 0;
@@ -331,33 +365,33 @@ function populateBoard() {
 	for (i = 0; i <= 25; i++) {
     switch (i) {
       case 1:
-        player = 1;
+        player = players[1];
         checkers = 2;
         break;
       case 6:
       case 13:
-        player = 2;
+        player = players[2];
         checkers = 5;
         break;
       case 8:
-        player = 2;
+        player = players[2];
         checkers = 3;
         break;
       case 12:
       case 19:
-        player = 1;
+        player = players[1];
         checkers = 5;
         break;
       case 17:
-        player = 1;
+        player = players[1];
         checkers = 3;
         break;
       case 24:
-        player = 2;
+        player = players[2];
         checkers = 2;
         break;
       default:
-        player = 0;
+        player = players[0];
         checkers = 0;
     }
     pointData[i] = {
@@ -368,11 +402,11 @@ function populateBoard() {
 	}
 
   //Populate bar point globals
-  for (i = barPoints[2]; i <= barPoints[1]; i++) {
+  for (i = players[2].barPoint; i <= players[1].barPoint; i++) {
     pointData[i] = {
 			id: i,
       checkers: 0,
-			player: 0
+			player: players[0]
 		};
   }
 
@@ -380,7 +414,7 @@ function populateBoard() {
   repopulateCheckers(points);
 
   //Set player label to the active player (1)
-  document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+  document.getElementById('playerLabel').innerHTML = activePlayer.name;
 }
 
 function populateBoardPoints(pointData){
@@ -398,20 +432,20 @@ function initiateCheckers(player, countOfCheckers){
   var svgns = 'http://www.w3.org/2000/svg';
 
   for (var i = 1; i <= countOfCheckers; i++) {
-    checker = document.getElementById('p' + player + 'c' + playerCheckerCount[player]);
+    checker = document.getElementById('p' + player.id + 'c' + playerCheckerCount[player.id]);
     if (!checker){
       checker = document.createElementNS(svgns, 'circle');
-      checker.setAttributeNS(null, 'id', 'p' + player + 'c' + playerCheckerCount[player]);
+      checker.setAttributeNS(null, 'id', 'p' + player.id + 'c' + playerCheckerCount[player.id]);
       checker.setAttributeNS(null, 'r', '20');
       checker.setAttributeNS(null, 'stroke', 'black');
       checker.setAttributeNS(null, 'stroke-width', '1');
-      checker.setAttributeNS(null, 'fill', checkerFill[player]);
+      checker.setAttributeNS(null, 'fill', checkerFill[player.id]);
       checker.style.transition = '.5s';
       document.getElementById('svgObj').appendChild(checker);
       checker.addEventListener('click', checkerClick);
     }
     curCheckers.push(checker);
-    playerCheckerCount[player]++;
+    playerCheckerCount[player.id]++;
   }
   return curCheckers;
 }
@@ -424,12 +458,12 @@ function checkerClick() {
   var checker = this;
 	var onPoint = checker.attributes.onPoint.value;
 	var checkerID = checker.id;
-	var player = parseFloat(checker.id.split('p')[1].split('c')[0]);
+	var player = players[parseFloat(checker.id.split('p')[1].split('c')[0])];
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(dice[0].curValue);
 	var numD2 = parseFloat(dice[1].curValue);
-  var playerOnBar = points[barPoints[player]].checkers.length > 0;
-  var barPieceSelected = numOnPoint === barPoints[player];
+  var playerOnBar = points[player.barPoint].checkers.length > 0;
+  var barPieceSelected = numOnPoint === player.barPoint;
   var canPlay = [false, false];
   var canGoHome = verifyCanGoHome(player);
 
@@ -455,7 +489,7 @@ function checkerClick() {
     else if (!activeChecker || activePlayer === player) {
 
       //Set points and prerequisites for moves
-    	if (player === 1) {
+    	if (player.id === 1) {
         numOnPoint = barPieceSelected ? 0 : numOnPoint;
     		point1 = (numOnPoint + numD1);
     		point2 = (numOnPoint + numD2);
@@ -477,7 +511,7 @@ function checkerClick() {
       if ( player === activePlayer && (!playerOnBar || barPieceSelected ))
       {
         //Checks for an available move using the first di and activates the relevant point
-      	if (dice[0].active && points[point1] && (points[point1].player === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
+      	if (dice[0].active && points[point1] && (points[point1].player.id === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !==0 && point1 !==25) || canGoHome )) {
           canPlay[0] = true;
           hotpoint1 = 't' + point1;
       		$('#t' + point1).attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
@@ -487,7 +521,7 @@ function checkerClick() {
       	}
 
         //Checks for an available move using the second di and activates the relevant point
-      	if (dice[1].active && (!dice[0].active || point1 !== point2) && points[point2] && (points[point2].player === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
+      	if (dice[1].active && (!dice[0].active || point1 !== point2) && points[point2] && (points[point2].player.id === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !==0 && point2 !==25) || canGoHome )) {
           canPlay[1] = true;
           hotpoint2 = 't' + point2;
       		$('#t' + point2).attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
@@ -497,7 +531,7 @@ function checkerClick() {
       	}
 
         //Checks for an available move using both dice and activates the relevant point
-        if ((canPlay[0] || canPlay[1]) && dice[0].active && dice[1].active && points[point3] && (points[point3].player === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
+        if ((canPlay[0] || canPlay[1]) && dice[0].active && dice[1].active && points[point3] && (points[point3].player.id === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !==0 && point3 !==25) || canGoHome )) {
           hotpoint3 = 't' + point3;
       		$('#t' + point3).attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
       		$('#t' + point3).click(function () {
@@ -531,14 +565,14 @@ function checkerClick() {
 function flashChecker(checker, player){
   $(checker).attr('fill', noPlayCheckerFill);
   setTimeout(function(){
-    $(checker).attr('fill', checkerFill[player]);
+    $(checker).attr('fill', checkerFill[player.id]);
   }, 500);
 }
 
 //Reset all active checkers and points
 function resetActive() {
   if (activeChecker) {
-    $(activeChecker).attr('fill', checkerFill[activePlayer]);
+    $(activeChecker).attr('fill', checkerFill[activePlayer.id]);
       activeChecker = null;
     resetPoints();
   }
@@ -624,9 +658,9 @@ function removeCheckerFromArray(inputArray, checker){
 }
 
 function changePlayers(){
-    activePlayer = activePlayer === 1 ? 2 : 1;
+    activePlayer = activePlayer === players[1] ? players[2] : players[1];
     diceRolled = false;
-    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+    document.getElementById('playerLabel').innerHTML = activePlayer.name;
 }
 
 //Moves a checker without specifying a clear board
@@ -647,15 +681,15 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
     if (!clearBoard && curPoint) {
       removeCheckerFromArray(points[curPoint].checkers, curChecker);
       if (points[curPoint].checkers.length === 0) {
-        points[curPoint].player = 0;
+        points[curPoint].player.id = 0;
       }
     }
 
     //If the new checker is hitting an opponents single checker, send them to the bar
-    if (pointNumber != barPoints[player] && points[pointNumber].player != 0 && points[pointNumber].player != player) {
+    if (pointNumber != player.barPoint && points[pointNumber].player.id != 0 && points[pointNumber].player != player) {
 
       //Send opponent checker to bar
-      moveChecker($('[onPoint=' + pointNumber +']').attr('id'), barPoints[player === 1 ? 2 : 1], points[pointNumber].player);
+      moveChecker($('[onPoint=' + pointNumber +']').attr('id'), player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player.id);
     }
 
     points[pointNumber].player = player;
@@ -693,7 +727,7 @@ function rollDice() {
 
 function verifyCanGoHome(player){
   //Set points and prerequisites for moves
-  if (player === 1) {
+  if (player.id === 1) {
     return points[19].checkers.length + points[20].checkers.length + points[21].checkers.length + points[22].checkers.length + points[23].checkers.length + points[24].checkers.length + points[25].checkers.length === 15;
   } else {
     return points[0].checkers.length + points[1].checkers.length + points[2].checkers.length + points[3].checkers.length + points[4].checkers.length + points[5].checkers.length + points[6].checkers.length === 15;
@@ -703,10 +737,10 @@ function verifyCanGoHome(player){
 //Verifies the player has an available move to play
 function verifyCanPlay() {
   var result = false;
-  var playerOnBar = points[barPoints[activePlayer]].checkers.length !== 0;
+  var playerOnBar = points[activePlayer.barPoint].checkers.length !== 0;
   var d0Value = dice[0].curValue;
   var d1Value = dice[1].curValue;
-  var homeOffset = activePlayer === 2 ? 25 : 0;
+  var homeOffset = activePlayer.id === 2 ? 25 : 0;
   var canGoHome = verifyCanGoHome(activePlayer);
 
 
@@ -735,7 +769,7 @@ function checkForMove(player, pointNumber, canGoHome){
   var point;
   if (25 >= pointNumber >= 0) {
     point = points[pointNumber];
-    if (point && (point.player === player || point.player === 0)) {
+    if (point && (point.player === player || point.player.id === 0)) {
       return true;
     }
   }
@@ -790,9 +824,9 @@ function findTopChecker(pointNumber){
 
 //Check if the player has won the game
 function checkForWin(){
-  var wonGame = activePlayer === 1 ? points[25].checkers.length === 15 : points[0].checkers.length === 15;
+  var wonGame = activePlayer.id === 1 ? points[25].checkers.length === 15 : points[0].checkers.length === 15;
   if (wonGame) {
-    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer] + ' WON THE GAME!!!';
+    document.getElementById('playerLabel').innerHTML = activePlayer.name + ' WON THE GAME!!!';
   }
   return wonGame;
 }
@@ -820,7 +854,7 @@ function placeCheckers(point){
   var i = 0;
   $(point.checkers).each(function(){
     //Get the new x y coordinates of the checker
-    res = calcCheckerXY(point.id, i,  point.player);
+    res = calcCheckerXY(point.id, i);
 
     //Set the checker x and y coordinates and its new point number
     $(this).attr('onPoint', point.id);
@@ -833,7 +867,7 @@ function placeCheckers(point){
 }
 
 //Calculates the new x and y coordinates of where to place a checker on a point
-function calcCheckerXY(pointNumber, count, player) {
+function calcCheckerXY(pointNumber, count) {
 	var result = [];
 
   //Calculate the new x and y coordinates for the checker
@@ -849,7 +883,7 @@ function calcCheckerXY(pointNumber, count, player) {
 	} else if (pointNumber <= 25) {
 		result[0] = 60 + ((pointNumber - 12) * 40);
 		result[1] = 550 - (count * 42) + 21;
-	} else if (pointNumber == barPoints[1])  {
+	} else if (pointNumber == players[1].barPoint)  {
     result[0] = 300;
     result[1] = 550 - (count * 42) + 21;
   } else {
@@ -878,13 +912,13 @@ function submitPlayerNames(){
   var notice;
   var originalColor;
   var modal = document.getElementById('OnlineGameModal');
-  playerNames[1] = document.getElementById('Player1Input').value;
-  playerNames[2] = document.getElementById('Player2Input').value;
-  if (playerNames[1] && playerNames[2]) {
+  players[1].name = document.getElementById('Player1Input').value;
+  players[2].name = document.getElementById('Player2Input').value;
+  if (players[1].name && players[2].name) {
     modal.style.display = 'none';
-    localPlayer = 1;
+    localPlayer = players[1];
     firebaseData = firebase.database();
-    get2PlayerGameData(playerNames[1], playerNames[2]);
+    get2PlayerGameData(players[1].name, players[2].name);
   }
   else {
     notice = document.getElementById('OnlineGameModalNotice');
@@ -909,15 +943,15 @@ function get2PlayerGameData(p1Name, p2Name){
       multiplayerGameID = activeGame.key;
       gameData = activeGame.val();
       if (p1Name === gameData.player2) {
-        localPlayer = 2;
+        localPlayer = players[2];
         flipBoard();
       }
-      playerNames[1] = gameData.player1;
-      playerNames[2] = gameData.player2;
+      players[1].name = gameData.player1;
+      players[2].name = gameData.player2;
     });
     if (createGame) {
       multiplayerGameID = firebaseRef.child('activeGames').push({
-        'activePlayer':activePlayer,
+        'activePlayer':activePlayer.toJSON,
         'combinedPlayerNames':combinePlayerNames(p1Name, p2Name),
         'player1':p1Name,
         'player2':p2Name,
@@ -932,18 +966,18 @@ function get2PlayerGameData(p1Name, p2Name){
 function update2PlayerGameData(){
     //write the game data to the server
   firebaseData.ref('activeGames/' + multiplayerGameID).set({
-    'activePlayer':activePlayer,
-    'combinedPlayerNames':combinePlayerNames(playerNames[1], playerNames[2]),
-    'player1':playerNames[1],
-    'player2':playerNames[2],
+    'activePlayer':activePlayer.toJSON,
+    'combinedPlayerNames':combinePlayerNames(players[1].name, players[2].name),
+    'player1':players[1].name,
+    'player2':players[2].name,
     'points':points.map(a => a.toJSON),
     'dice':dice.map(a => a.toJSON)
   });
 }
 
 function combinePlayerNames(player1Name, player2Name){
-  playerNames[1] = player1Name.toString();
-  playerNames[2] = player2Name.toString();
+  players[1].name = player1Name.toString();
+  players[2].name = player2Name.toString();
   if (player1Name < player2Name) {
     return player1Name + player2Name;
   }
@@ -967,7 +1001,7 @@ function monitorForOpponentPlay(){
     dice[1].canPlay = gameData.dice[1].canPlay;
 
     //Set player label to the active player
-    document.getElementById('playerLabel').innerHTML = playerNames[activePlayer];
+    document.getElementById('playerLabel').innerHTML = activePlayer.name;
   });
 }
 
