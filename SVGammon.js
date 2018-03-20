@@ -709,7 +709,7 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 
 			//Send opponent checker to bar
 			moveChecker($('[onPoint=' + pointNumber + ']')
-				.attr('id'), player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player.id);
+				.attr('id'), player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player);
 		}
 
 		points[pointNumber].player = player;
@@ -995,7 +995,7 @@ function get2PlayerGameData(p1Name, p2Name) {
 			if (createGame) {
 				multiplayerGameID = firebaseRef.child('activeGames')
 					.push({
-						'activePlayer': activePlayer.toJSON,
+						'activePlayer': activePlayer.id,
 						'combinedPlayerNames': combinePlayerNames(p1Name, p2Name),
 						'player1': p1Name,
 						'player2': p2Name,
@@ -1037,6 +1037,10 @@ function monitorForOpponentPlay() {
 		gameData = snapshot.val();
 		points = populateBoardPoints(gameData.points);
 		repopulateCheckers(points);
+    if (activePlayer !== localPlayer && gameData.activePlayer === localPlayer.id) {
+      document.getElementById('PlayerNotificationModalNotice').innerHTML = 'Your turn!';
+      document.getElementById('PlayerNotificationModal').style.display = 'block';
+    }
 		activePlayer = players[gameData.activePlayer];
 		dice[0].curValue = gameData.dice[0].curValue;
 		dice[1].curValue = gameData.dice[1].curValue;
@@ -1046,6 +1050,7 @@ function monitorForOpponentPlay() {
 		dice[1].active = gameData.dice[1].active;
 		dice[0].canPlay = gameData.dice[0].canPlay;
 		dice[1].canPlay = gameData.dice[1].canPlay;
+
 
 		//Set player label to the active player
 		document.getElementById('playerLabel')
