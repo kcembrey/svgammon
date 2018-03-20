@@ -31,18 +31,19 @@ var diceRolled = false;
 var players;
 
 class boardPlayer {
-	constructor(id, barPoint) {
+	constructor(id, barPoint, startingPoint) {
 		this.id = id;
 		this.name = id.toString();
 		this._barPoint = barPoint;
+		this._startingPoint = startingPoint;
 	}
 
 	set id(value) {
-		this._value = value;
+		this._id = value;
 	}
 
 	get id() {
-		return this._value;
+		return this._id;
 	}
 
 	set name(value) {
@@ -57,11 +58,11 @@ class boardPlayer {
 		return this._barPoint;
 	}
 
-	calculatePoint(pointNumber, value) {
+	calculatePoint(value) {
 		if (this._id === 1) {
-			return value;
+			return this._startingPoint + value;
 		} else {
-			return pointNumber - value;
+			return this._startingPoint - value;
 		}
 	}
 }
@@ -252,7 +253,7 @@ function initiate() {
 	var svgns = 'http://www.w3.org/2000/svg';
 	var element;
 
-	players = [new boardPlayer(0, 1000), new boardPlayer(1, 27), new boardPlayer(2, 26)];
+	players = [new boardPlayer(0, 1000, 1000), new boardPlayer(1, 27, 0), new boardPlayer(2, 26, 25)];
 
 	//Create Dice SVG objects
 	for (i = 0; i <= 6; i++) {
@@ -697,7 +698,7 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 		if (!clearBoard && curPoint) {
 			removeCheckerFromArray(points[curPoint].checkers, curChecker);
 			if (points[curPoint].checkers.length === 0) {
-				points[curPoint].player.id = 0;
+				points[curPoint].player = players[0];
 			}
 		}
 
@@ -757,14 +758,13 @@ function verifyCanPlay() {
 	var playerOnBar = points[activePlayer.barPoint].checkers.length !== 0;
 	var d0Value = dice[0].curValue;
 	var d1Value = dice[1].curValue;
-	var homeOffset = activePlayer.id === 2 ? 25 : 0;
 	var canGoHome = verifyCanGoHome(activePlayer);
 
 
 
 	//If the player is on the bar, they can only play if the point is their own or has 0/1 pieces
 	if (playerOnBar) {
-		result = ((points[d0Value - homeOffset].player === activePlayer || points[d0Value - homeOffset].checkers.length <= 1)) || ((points[d1Value - homeOffset].player === activePlayer || points[d1Value - homeOffset].checkers.length <= 1));
+		result = ((points[activePlayer.calculatePoint(d0Value)].player === activePlayer || points[activePlayer.calculatePoint(d0Value)].checkers.length <= 1)) || ((points[activePlayer.calculatePoint(d1Value)].player === activePlayer || points[activePlayer.calculatePoint(d1Value)].checkers.length <= 1));
 	} else {
 		for (var i = 0; i <= 25; i++) {
 			if (points[i].player === activePlayer) {
