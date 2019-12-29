@@ -106,30 +106,26 @@ function initiate() {
 
 	//Create top right points SVG objects
 	for (i = 1; i <= 6; i++) {
-		element = "t" + (13 - i);
 		document.getElementById("t" + (13 - i))
-			.setAttribute("points", i * 40 + " 0, " + (i * 40 + 20) + " 230, " + (i * 40 + 40) + " 0");
+			.setAttribute("points", i * (parentHeight / 14.75) + ' 0, ' + (i * (parentHeight / 14.75) + (parentHeight / 29.5)) + ' ' + parentHeight * 0.4 + ', ' + (i * (parentHeight / 14.75) + (parentHeight / 14.75)) + ' 0');
 	}
 
 	//Create top left points SVG objects
 	for (i = 7; i <= 12; i++) {
-		element = "t" + (13 - i);
 		document.getElementById("t" + (13 - i))
-			.setAttribute("points", (i * 40 + 40) + " 0, " + (i * 40 + 60) + " 230, " + (i * 40 + 80) + " 0");
+			.setAttribute("points", (i * (parentHeight / 14.75) + (parentHeight / 14.75)) + " 0, " + (i * (parentHeight / 14.75) + (parentHeight / (590/60))) + ' ' + parentHeight * 0.4 + ', ' + (i * (parentHeight / 14.75) + (parentHeight / 7.375)) + ' 0');
 	}
 
 	//Create bottom left points SVG objects
 	for (i = 1; i <= 6; i++) {
-		element = "t" + (i + 12);
 		document.getElementById("t" + (i + 12))
-			.setAttribute("points", i * 40 + " 590, " + (i * 40 + 20) + " 360, " + (i * 40 + 40) + " 590");
+			.setAttribute("points", i * (parentHeight / 14.75) + ' ' + parentHeight + ', ' + (i * (parentHeight / 14.75) + (parentHeight / 29.5)) + ' ' + parentHeight * 0.6 + ', ' + (i * (parentHeight / 14.75) + (parentHeight / 14.75)) + ' ' + parentHeight);
 	}
 
 	//Create bottom right points SVG objects
 	for (i = 7; i <= 12; i++) {
-		element = "t" + (i + 12);
 		document.getElementById("t" + (i + 12))
-			.setAttribute("points", (i * 40 + 40) + " 590, " + (i * 40 + 60) + " 360, " + (i * 40 + 80) + " 590");
+			.setAttribute("points", (i * (parentHeight / 14.75) + (parentHeight / 14.75)) + ' ' + parentHeight + ', ' + (i * (parentHeight / 14.75) + (parentHeight / (590/60))) + ' ' + parentHeight * 0.6 + ', ' + (i * (parentHeight / 14.75) + (parentHeight / 7.375)) + ' ' + parentHeight);
 	}
 
 	//Setup onEnter event listeners for Online Game Modal
