@@ -21,6 +21,7 @@ var evenPointInactiveFill = 'white';
 var oddPointInactiveFill = 'red';
 var activeChecker;
 var activePlayer;
+var activeDice;
 var multiplayerGameID;
 var playerCheckerCount = [0, 0, 0];
 var dice = [];
@@ -456,13 +457,11 @@ function initiateCheckers(player, countOfCheckers) {
 }
 
 //Function when checker is clicked
-function checkerClick() {
+function checkerClick(checker) {
 	var point1;
 	var point2;
 	var point3;
-	var checker = this;
 	var onPoint = checker.attributes.onPoint.value;
-	var checkerID = checker.id;
 	var player = players[parseFloat(checker.id.split('p')[1].split('c')[0])];
 	var numOnPoint = parseFloat(onPoint);
 	var numD1 = parseFloat(dice[0].curValue);
@@ -517,6 +516,7 @@ function checkerClick() {
 				//Checks for an available move using the first di and activates the relevant point
 				if (dice[0].active && points[point1] && (points[point1].player.id === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !== 0 && point1 !== 25) || canGoHome)) {
 					canPlay[0] = true;
+					activeDice = dice[0];
 					hotpoint1 = 't' + point1;
 					document.getElementById('t' + point1).setAttribute("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
 					document.getElementById('t' + point1)
@@ -526,6 +526,7 @@ function checkerClick() {
 				//Checks for an available move using the second di and activates the relevant point
 				if (dice[1].active && (!dice[0].active || point1 !== point2) && points[point2] && (points[point2].player.id === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !== 0 && point2 !== 25) || canGoHome)) {
 					canPlay[1] = true;
+					activeDice = dice[1];
 					hotpoint2 = 't' + point2;
 					document.getElementById('t' + point2)
 						.setAttribute("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
@@ -535,6 +536,7 @@ function checkerClick() {
 				//Checks for an available move using both dice and activates the relevant point
 				if ((canPlay[0] || canPlay[1]) && dice[0].active && dice[1].active && points[point3] && (points[point3].player.id === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !== 0 && point3 !== 25) || canGoHome)) {
 					hotpoint3 = 't' + point3;
+					activeDice = [dice[0], dice[1]];
 					document.getElementById('t' + point3)
 						.setAttribute("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
 					document.getElementById('t' + point3).addEventListener('click', pointClick);
@@ -574,18 +576,13 @@ function resetActive() {
 	if (activeChecker) {
 		checker.setAttribute('fill', checkerFill[activePlayer.id]);
 		activeChecker = null;
-		resetPoints();
+		resetPoint(document.getElementById(hotpoint1));
+		resetPoint(document.getElementById(hotpoint2));
+		resetPoint(document.getElementById(hotpoint3));
+		hotpoint1 = null;
+		hotpoint2 = null;
+		hotpoint3 = null;
 	}
-}
-
-//Reset all hot points
-function resetPoints() {
-	resetPoint(document.getElementById(hotpoint1));
-	resetPoint(document.getElementById(hotpoint2));
-	resetPoint(document.getElementById(hotpoint3));
-	hotpoint1 = null;
-	hotpoint2 = null;
-	hotpoint3 = null;
 }
 
 //Resets a single point
@@ -616,20 +613,15 @@ function isEven(n) {
 }
 
 //Function for when a point is clicked
-function pointClick(clickedPoint) { //checkerID, point, player, diceUsed) {
-	var checkerPoint = document.getElementById(checkerID)
-		.getAttribute('onPoint');
+function pointClick(point) {
 
 	//Moves the checker to its new point
-	moveChecker(checkerID, pointNumber(point), player);
+	moveChecker(activeChecker, pointNumber(point), player);
 
 	//Resets any active hot points
 	resetActive();
 
-	//Gets the distance between the checker point and the new point
-	var distance = Math.abs(checkerPoint - pointNumber(point));
-
-	diceUsed.forEach(function (di) {
+	activeDice.forEach(function (di) {
 		di.play();
 	});
 
@@ -663,23 +655,17 @@ function changePlayers() {
 		.innerHTML = activePlayer.name;
 }
 
-//Moves a checker without specifying a clear board
-function moveChecker(checkerID, pointNumber, player) {
-	moveChecker(checkerID, pointNumber, player, false);
-}
-
 //Moves a checker
-function moveChecker(checkerID, pointNumber, player, clearBoard) {
+function moveChecker(checker, pointNumber, player, clearBoard) {
 
 	//Gets the checker's current point location
-	var curChecker = document.getElementById(checkerID);
-	var curPoint = curChecker.getAttribute('onPoint');
+	var curPoint = checker.getAttribute('onPoint');
 
 	if (curPoint !== pointNumber) {
 
 		//Only adjust the original point's count and player if the board is not being cleared and the checker is on a current point
 		if (!clearBoard && curPoint) {
-			removeCheckerFromArray(points[curPoint].checkers, curChecker);
+			removeCheckerFromArray(points[curPoint].checkers, checker);
 			if (points[curPoint].checkers.length === 0) {
 				points[curPoint].player = players[0];
 			}
@@ -689,12 +675,12 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 		if (pointNumber != player.barPoint && points[pointNumber].player.id != 0 && points[pointNumber].player != player) {
 
 			//Send opponent checker to bar
-			moveChecker(document.querySelector('[onPoint=' + pointNumber + ']').getAttribute('id'), 
+			moveChecker(document.querySelector('[onPoint=' + pointNumber + ']'), 
 			player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player.id);
 		}
 
 		points[pointNumber].player = player;
-		points[pointNumber].checkers.push(curChecker);
+		points[pointNumber].checkers.push(checker);
 	}
 }
 
