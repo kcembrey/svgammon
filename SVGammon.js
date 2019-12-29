@@ -31,217 +31,7 @@ var localPlayer;
 var diceRolled = false;
 var players;
 
-class boardPlayer {
-	constructor(id, barPoint, startingPoint) {
-		this.id = id;
-		this.name = id.toString();
-		this._barPoint = barPoint;
-		this._startingPoint = startingPoint;
-	}
-
-	set id(value) {
-		this._id = value;
-	}
-
-	get id() {
-		return this._id;
-	}
-
-	set name(value) {
-		this._name = value;
-	}
-
-	get name() {
-		return this._name;
-	}
-
-	get barPoint() {
-		return this._barPoint;
-	}
-
-	calculatePoint(value) {
-		if (this._id === 1) {
-			return this._startingPoint + value;
-		} else {
-			return this._startingPoint - value;
-		}
-	}
-}
-class boardPoint {
-	constructor(id, checkerCount, player) {
-		this.id = id;
-		this.checkers = initiateCheckers(player, checkerCount);
-		this.player = player;
-	}
-
-	get id() {
-		return this._id;
-	}
-
-	set id(value) {
-		this._id = value;
-	}
-
-	get checkers() {
-		return this._checkers;
-	}
-
-	set checkers(value) {
-		this._checkers = value;
-	}
-
-	get object() {
-		return this._object;
-	}
-
-	set object(value) {
-		this._object = value;
-	}
-
-	get dots() {
-		return this._dots;
-	}
-
-	set dots(value) {
-		this._dots = value;
-	}
-
-	get player() {
-		return this._player;
-	}
-
-	set player(value) {
-		this._player = value;
-	}
-
-	get toJSON() {
-		return {
-			id: this._id,
-			checkers: this._checkers.length,
-			player: this._player.id
-		};
-	}
-}
-
-class boardDi {
-	constructor(id, object) {
-		this.id = id;
-		this.object = object;
-		this.active = false;
-		this.dots = [];
-		this.curValue = 0;
-		this.canPlay = false;
-		this.double = false;
-	}
-
-	get id() {
-		return this._id;
-	}
-
-	set id(value) {
-		this._id = value;
-	}
-
-	get curValue() {
-		return this._curValue;
-	}
-
-	set curValue(value) {
-		this._curValue = value;
-
-		//hide all dots on di
-		this._dots.forEach(function (dot) {
-			dot.style.visibility = 'hidden';
-		});
-
-		//show relevant dots from value
-		if (value === 1 || value === 3 || value === 5) {
-			this._dots[6].style.visibility = 'visible';
-		}
-		if (value >= 2) {
-			this._dots[0].style.visibility = 'visible';
-			this._dots[5].style.visibility = 'visible';
-		}
-		if (value >= 4) {
-			this._dots[1].style.visibility = 'visible';
-			this._dots[4].style.visibility = 'visible';
-		}
-		if (value === 6) {
-			this._dots[2].style.visibility = 'visible';
-			this._dots[3].style.visibility = 'visible';
-		}
-	}
-
-	get double() {
-		return this._double;
-	}
-
-	set double(value) {
-		this._double = value;
-		this._object.style.fill = value ? doubleDiceFill : singleDiceFill;
-	}
-
-	get active() {
-		return this._active;
-	}
-
-	set active(value) {
-		this._active = value;
-		this._object.style.fill = value ? this._object.style.fill : emptyDiceFill;
-	}
-
-	get object() {
-		return this._object;
-	}
-
-	set object(value) {
-		this._object = value;
-	}
-
-	get dots() {
-		return this._dots;
-	}
-
-	set dots(value) {
-		this._dots = value;
-	}
-
-	get canPlay() {
-		return this._canPlay;
-	}
-
-	set canPlay(value) {
-		this._canPlay = value;
-	}
-
-	play() {
-		//Updates the specified di fill color and status
-		if (this._double) {
-			this.double = false;
-		} else {
-			this.active = false;
-		}
-	}
-
-	hide() {
-		this._object.style.visiblity = 'hidden';
-	}
-
-	get toJSON() {
-		return {
-			id: this._id,
-			active: this._active,
-			curValue: this._curValue,
-			canPlay: this._canPlay,
-			double: this._double
-		};
-	}
-}
-
-
 populateBoard();
-
-
 
 //Initiate required board pieces the first time
 function initiate() {
@@ -457,10 +247,11 @@ function initiateCheckers(player, countOfCheckers) {
 }
 
 //Function when checker is clicked
-function checkerClick(checker) {
+function checkerClick(event) {
 	var point1;
 	var point2;
 	var point3;
+	var checker = event.target;
 	var onPoint = checker.attributes.onPoint.value;
 	var player = players[parseFloat(checker.id.split('p')[1].split('c')[0])];
 	var numOnPoint = parseFloat(onPoint);
@@ -486,7 +277,7 @@ function checkerClick(checker) {
 
 		//Assumes player is moving the active checker to the point under the selected checker if an available move
 		else if (activeChecker && activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2 || 't' + numOnPoint === hotpoint3)) {
-			pointClick(document.getElementById('t' + document.getElementById(activeChecker.id).getAttribute('onPoint')));
+			pointClick({event: document.getElementById('t' + document.getElementById(activeChecker.id).getAttribute('onPoint'))});
 		}
 
 		//If a checker is not active and the selected checker belongs to the player, continue to check for available moves
@@ -516,8 +307,8 @@ function checkerClick(checker) {
 				//Checks for an available move using the first di and activates the relevant point
 				if (dice[0].active && points[point1] && (points[point1].player.id === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !== 0 && point1 !== 25) || canGoHome)) {
 					canPlay[0] = true;
-					activeDice = dice[0];
 					hotpoint1 = 't' + point1;
+					document.getElementById('t' + point1).setAttribute('activeDice', JSON.stringify([0]));
 					document.getElementById('t' + point1).setAttribute("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
 					document.getElementById('t' + point1)
 						.addEventListener('click', pointClick);
@@ -526,8 +317,8 @@ function checkerClick(checker) {
 				//Checks for an available move using the second di and activates the relevant point
 				if (dice[1].active && (!dice[0].active || point1 !== point2) && points[point2] && (points[point2].player.id === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !== 0 && point2 !== 25) || canGoHome)) {
 					canPlay[1] = true;
-					activeDice = dice[1];
 					hotpoint2 = 't' + point2;
+					document.getElementById('t' + point2).setAttribute('activeDice', JSON.stringify([1]));
 					document.getElementById('t' + point2)
 						.setAttribute("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
 					document.getElementById('t' + point2).addEventListener('click', pointClick);
@@ -536,7 +327,7 @@ function checkerClick(checker) {
 				//Checks for an available move using both dice and activates the relevant point
 				if ((canPlay[0] || canPlay[1]) && dice[0].active && dice[1].active && points[point3] && (points[point3].player.id === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !== 0 && point3 !== 25) || canGoHome)) {
 					hotpoint3 = 't' + point3;
-					activeDice = [dice[0], dice[1]];
+					document.getElementById('t' + point3).setAttribute('activeDice', JSON.stringify([0,1]));
 					document.getElementById('t' + point3)
 						.setAttribute("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
 					document.getElementById('t' + point3).addEventListener('click', pointClick);
@@ -574,7 +365,7 @@ function flashChecker(checker, player) {
 //Reset all active checkers and points
 function resetActive() {
 	if (activeChecker) {
-		checker.setAttribute('fill', checkerFill[activePlayer.id]);
+		activeChecker.setAttribute('fill', checkerFill[activePlayer.id]);
 		activeChecker = null;
 		resetPoint(document.getElementById(hotpoint1));
 		resetPoint(document.getElementById(hotpoint2));
@@ -613,16 +404,18 @@ function isEven(n) {
 }
 
 //Function for when a point is clicked
-function pointClick(point) {
+function pointClick(input) {
+
+	var point = input.target;
 
 	//Moves the checker to its new point
-	moveChecker(activeChecker, pointNumber(point), player);
+	moveChecker(activeChecker, pointNumber(point), activePlayer);
 
 	//Resets any active hot points
 	resetActive();
 
-	activeDice.forEach(function (di) {
-		di.play();
+	JSON.parse(point.getAttribute('activeDice')).forEach(function (diNumber) {
+		dice[diNumber].play();
 	});
 
 	checkForWin();
@@ -675,7 +468,7 @@ function moveChecker(checker, pointNumber, player, clearBoard) {
 		if (pointNumber != player.barPoint && points[pointNumber].player.id != 0 && points[pointNumber].player != player) {
 
 			//Send opponent checker to bar
-			moveChecker(document.querySelector('[onPoint=' + pointNumber + ']'), 
+			moveChecker(document.querySelector('[onPoint="' + pointNumber + '"]'), 
 			player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player.id);
 		}
 
@@ -768,7 +561,7 @@ function adjustCheckers(pointNumber) {
 	//Collapse the checkers on the current point if there are more than 5 total
 	if (pointNumber !== null && points[pointNumber].checkers.length > 5) {
 		//Find all non-collapsed checkers on this point
-		document.querySelectorAll("[onPoint=" + pointNumber + "][collapsed!='true']")
+		document.querySelectorAll('[onPoint="' + pointNumber + '"]:not([collapsed="true"])')
 			.forEach(function (checker) {
 				//Calculate the new y coordinate of the checker
 				var curY = parseFloat(checker.getAttribute('cy'));
@@ -780,7 +573,7 @@ function adjustCheckers(pointNumber) {
 			});
 	} else if (pointNumber) {
 		//Find all collapsed checkers on this point
-		document.querySelectorAll("[onPoint=" + pointNumber + "][collapsed='true']")
+		document.querySelectorAll('[onPoint="' + pointNumber + '"][collapsed="true"]')
 			.forEach(function (checker) {
 				//Calculate the new y coordinate of the checker
 				var curY = parseFloat(checker.getAttribute('cy'));
@@ -797,7 +590,7 @@ function adjustCheckers(pointNumber) {
 function findTopChecker(pointNumber) {
 	var selectedChecker;
 	//Find all checkers on this point
-	document.querySelectorAll("[onPoint=" + pointNumber + "]")
+	document.querySelectorAll('[onPoint="' + pointNumber + '"]')
 		.forEach(function (checker) {
 			//Update selectedChecker if it is null or the found checker is above the selected checker
 			if (!selectedChecker || (pointNumber > 12 ? parseFloat(checker.getAttribute('cy')) < parseFloat(selectedChecker.getAttribute('cy')) : parseFloat(checker.getAttribute('cy')) > parseFloat(selectedChecker.getAttribute('cy')))) {
