@@ -35,44 +35,64 @@ populateBoard();
 
 //Initiate required board pieces the first time
 function initiate() {
-	var checker;
 	var di = 0;
 	var dot;
-	var cx;
-	var cy;
 	var rx;
 	var svgns = 'http://www.w3.org/2000/svg';
-	var element;
 
 	players = [new boardPlayer(0, 1000, 1000), new boardPlayer(1, 27, 0), new boardPlayer(2, 26, 25)];
 
+	//Declare reference objects
+	var parentContent = document.getElementById("svgObj");
+    var parentWidth = parentContent.width.baseVal.value;
+	var parentHeight = parentContent.height.baseVal.value;
+	var diceHeight = parentHeight * 0.08;
+	var diceTop = (parentHeight / 2) - diceHeight;
+	var di0Left = (parentHeight / 4) - diceHeight;
+	var di1Left = (parentHeight / 4) + diceHeight;
+	var diceDotRadius = diceHeight / 10;
+
+
+	//Size Board Backgaround Objects
+	var boardWidth = parentHeight * 1.05;
+	var bar = document.getElementById('bar');
+	var ledge = document.getElementById('ledge');
+	var p1home = document.getElementById('t0');
+	var p2home = document.getElementById('t25');
+
+	bar.setAttribute('points', parentHeight / 2.1 + ' 0, ' + parentHeight / 1.85 + ' 0, ' + parentHeight / 1.85 + ' ' + parentHeight + ', ' + parentHeight / 2.1 + ' ' + parentHeight);
+	ledge.setAttribute('points', '0 0, ' + parentHeight / 14.75 + ' 0, ' + parentHeight / 14.75 + ' ' + parentHeight + ', 0 ' + parentHeight);
+	p1home.setAttribute('points', (boardWidth - (boardWidth / 14.75)) + ' 0, ' + boardWidth + ' 0, ' + boardWidth + ' ' + parentHeight / 2 + ', ' + (boardWidth - (boardWidth / 14.75)) + ' ' + parentHeight / 2);
+	p2home.setAttribute('points', (boardWidth - (boardWidth / 14.75)) + ' ' + parentHeight / 2 + ', ' + boardWidth + ' ' + parentHeight / 2 + ', ' + boardWidth + ' ' + parentHeight + ', ' + (boardWidth - (boardWidth / 14.75)) + ' ' + parentHeight);
+
+
 	//Create Dice SVG objects
 	for (i = 0; i <= 6; i++) {
-		dx = di === 0 ? (i === 6 ? '130' : (isEven(i) ? '119' : '141')) : (i === 6 ? '190' : (isEven(i) ? '179' : '201'));
-		dy = i <= 1 ? 294 : (i <= 3 ? 305 : (i <= 5 ? 316 : 305));
+		dx = di === 0 ? (i === 6 ? di0Left + (diceHeight / 2) - (diceDotRadius / 2) : (isEven(i) ? di0Left + (diceHeight / 4) - (diceDotRadius / 2) : di0Left + (diceHeight * 0.75) - (diceDotRadius / 2))) : (i === 6 ? di1Left + (diceHeight / 2) - (diceDotRadius / 2) : (isEven(i) ? di1Left + (diceHeight / 4) - (diceDotRadius / 2) : di1Left + (diceHeight * 0.75) - (diceDotRadius / 2)));
+		dy = i <= 1 ? diceTop + diceHeight / 4 : (i <= 3 ? diceTop + diceHeight / 2 : (i <= 5 ? diceTop + diceHeight * 0.75 : diceTop + diceHeight / 2));
 
 		if (i === 0) {
-			rx = di === 0 ? '110' : '170';
+			rx = di === 0 ? di0Left : di1Left;
 			rect = document.createElementNS(svgns, 'rect');
-			rect.setAttributeNS(null, 'id', 'd' + di);
-			rect.setAttributeNS(null, 'stroke', 'black');
-			rect.setAttributeNS(null, 'stroke-width', '1');
-			rect.setAttributeNS(null, 'width', '40');
-			rect.setAttributeNS(null, 'height', '40');
-			rect.setAttributeNS(null, 'x', rx);
-			rect.setAttributeNS(null, 'y', '285');
+			rect.setAttribute('id', 'd' + di);
+			rect.setAttribute('stroke', 'black');
+			rect.setAttribute('stroke-width', '1');
+			rect.setAttribute('width', diceHeight);
+			rect.setAttribute('height', diceHeight);
+			rect.setAttribute('x', rx);
+			rect.setAttribute('y', diceTop);
 			document.getElementById('svgObj')
 				.appendChild(rect);
 			dice[di] = new boardDi(di, rect);
 		}
 		dot = document.createElementNS(svgns, 'circle');
-		dot.setAttributeNS(null, 'id', 'd' + di + 'd' + i);
-		dot.setAttributeNS(null, 'r', '4');
-		dot.setAttributeNS(null, 'stroke', 'black');
-		dot.setAttributeNS(null, 'stroke-width', '1');
-		dot.setAttributeNS(null, 'fill', diceDotFill);
-		dot.setAttributeNS(null, 'cx', dx);
-		dot.setAttributeNS(null, 'cy', dy);
+		dot.setAttribute('id', 'd' + di + 'd' + i);
+		dot.setAttribute('r', diceDotRadius);
+		dot.setAttribute('stroke', 'black');
+		dot.setAttribute('stroke-width', '1');
+		dot.setAttribute('fill', diceDotFill);
+		dot.setAttribute('cx', dx);
+		dot.setAttribute('cy', dy);
 		document.getElementById('svgObj')
 			.appendChild(dot);
 		dice[di].dots[i] = dot;
@@ -230,11 +250,11 @@ function initiateCheckers(player, countOfCheckers) {
 		checker = document.getElementById('p' + player.id + 'c' + playerCheckerCount[player.id]);
 		if (!checker) {
 			checker = document.createElementNS(svgns, 'circle');
-			checker.setAttributeNS(null, 'id', 'p' + player.id + 'c' + playerCheckerCount[player.id]);
-			checker.setAttributeNS(null, 'r', '20');
-			checker.setAttributeNS(null, 'stroke', 'black');
-			checker.setAttributeNS(null, 'stroke-width', '1');
-			checker.setAttributeNS(null, 'fill', checkerFill[player.id]);
+			checker.setAttribute('id', 'p' + player.id + 'c' + playerCheckerCount[player.id]);
+			checker.setAttribute('r', '20');
+			checker.setAttribute('stroke', 'black');
+			checker.setAttribute('stroke-width', '1');
+			checker.setAttribute('fill', checkerFill[player.id]);
 			checker.style.transition = '.5s';
 			document.getElementById('svgObj')
 				.appendChild(checker);
