@@ -8,7 +8,7 @@ var diceDotFill = 'black';
 var hotpoint1;
 var hotpoint2;
 var hotpoint3;
-var element;
+var element; 
 var initiated = false;
 var checkerFill = ['', 'black', 'brown'];
 var activeCheckerFill = 'purple';
@@ -487,7 +487,7 @@ function checkerClick() {
 
 		//Assumes player is moving the active checker to the point under the selected checker if an available move
 		else if (activeChecker && activePlayer === player && ('t' + numOnPoint === hotpoint1 || 't' + numOnPoint === hotpoint2 || 't' + numOnPoint === hotpoint3)) {
-			pointClick(activeChecker.id, document.getElementById('t' + numOnPoint), player);
+			pointClick(document.getElementById('t' + document.getElementById(activeChecker.id).getAttribute('onPoint')));
 		}
 
 		//If a checker is not active and the selected checker belongs to the player, continue to check for available moves
@@ -518,43 +518,33 @@ function checkerClick() {
 				if (dice[0].active && points[point1] && (points[point1].player.id === 0 || points[point1].player === player || points[point1].checkers.length === 1) && ((point1 !== 0 && point1 !== 25) || canGoHome)) {
 					canPlay[0] = true;
 					hotpoint1 = 't' + point1;
-					$('#t' + point1)
-						.attr("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
-					$('#t' + point1)
-						.click(function () {
-							pointClick(checkerID, document.getElementById('t' + point1), player, [dice[0]]);
-						});
+					document.getElementById('t' + point1).setAttribute("fill", (point1 === 0 || point1 === 25 ? edgeActiveFill : pointActiveFill));
+					document.getElementById('t' + point1)
+						.addEventListener('click', pointClick);
 				}
 
 				//Checks for an available move using the second di and activates the relevant point
 				if (dice[1].active && (!dice[0].active || point1 !== point2) && points[point2] && (points[point2].player.id === 0 || points[point2].player === player || points[point2].checkers.length === 1) && ((point2 !== 0 && point2 !== 25) || canGoHome)) {
 					canPlay[1] = true;
 					hotpoint2 = 't' + point2;
-					$('#t' + point2)
-						.attr("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
-					$('#t' + point2)
-						.click(function () {
-							pointClick(checkerID, document.getElementById('t' + point2), player, [dice[1]]);
-						});
+					document.getElementById('t' + point2)
+						.setAttribute("fill", (point2 === 0 || point2 === 25 ? edgeActiveFill : pointActiveFill));
+					document.getElementById('t' + point2).addEventListener('click', pointClick);
 				}
 
 				//Checks for an available move using both dice and activates the relevant point
 				if ((canPlay[0] || canPlay[1]) && dice[0].active && dice[1].active && points[point3] && (points[point3].player.id === 0 || points[point3].player === player || points[point3].checkers.length === 1) && ((point3 !== 0 && point3 !== 25) || canGoHome)) {
 					hotpoint3 = 't' + point3;
-					$('#t' + point3)
-						.attr("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
-					$('#t' + point3)
-						.click(function () {
-							pointClick(checkerID, document.getElementById('t' + point3), player, [dice[0], dice[1]]);
-						});
+					document.getElementById('t' + point3)
+						.setAttribute("fill", (point3 === 0 || point3 === 25 ? edgeActiveFill : point2MoveActiveFill));
+					document.getElementById('t' + point3).addEventListener('click', pointClick);
 				}
 			}
 
 			//Activates the selected checker if there is a valid move
 			if (canPlay[0] || canPlay[1]) {
 				activeChecker = checker;
-				$(checker)
-					.attr('fill', activeCheckerFill);
+				checker.setAttribute('fill', activeCheckerFill);
 			}
 
 			//Flashes the checker if there are no valid moves
@@ -573,19 +563,16 @@ function checkerClick() {
 }
 
 function flashChecker(checker, player) {
-	$(checker)
-		.attr('fill', noPlayCheckerFill);
+	checker.setAttribute('fill', noPlayCheckerFill);
 	setTimeout(function () {
-		$(checker)
-			.attr('fill', checkerFill[player.id]);
+		checker.setAttribute('fill', checkerFill[player.id]);
 	}, 500);
 }
 
 //Reset all active checkers and points
 function resetActive() {
 	if (activeChecker) {
-		$(activeChecker)
-			.attr('fill', checkerFill[activePlayer.id]);
+		checker.setAttribute('fill', checkerFill[activePlayer.id]);
 		activeChecker = null;
 		resetPoints();
 	}
@@ -606,18 +593,14 @@ function resetPoint(point) {
 
 	//Verify the point is not null
 	if (point) {
-		$(point)
-			.unbind("click");
+		point.removeEventListener("click", pointClick);
 		var pointN = pointNumber(point);
 		if (pointN === 0 || pointN === 25) {
-			$(point)
-				.attr("fill", edgeInActiveFill);
+			point.setAttribute("fill", edgeInActiveFill);
 		} else if (isEven(pointN)) {
-			$(point)
-				.attr("fill", evenPointInactiveFill);
+			point.setAttribute("fill", evenPointInactiveFill);
 		} else {
-			$(point)
-				.attr("fill", oddPointInactiveFill);
+			point.setAttribute("fill", oddPointInactiveFill);
 		}
 	}
 }
@@ -633,7 +616,7 @@ function isEven(n) {
 }
 
 //Function for when a point is clicked
-function pointClick(checkerID, point, player, diceUsed) {
+function pointClick(clickedPoint) { //checkerID, point, player, diceUsed) {
 	var checkerPoint = document.getElementById(checkerID)
 		.getAttribute('onPoint');
 
@@ -706,8 +689,8 @@ function moveChecker(checkerID, pointNumber, player, clearBoard) {
 		if (pointNumber != player.barPoint && points[pointNumber].player.id != 0 && points[pointNumber].player != player) {
 
 			//Send opponent checker to bar
-			moveChecker($('[onPoint=' + pointNumber + ']')
-				.attr('id'), player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player.id);
+			moveChecker(document.querySelector('[onPoint=' + pointNumber + ']').getAttribute('id'), 
+			player.id === 1 ? players[2].barPoint : players[1].barPoint, points[pointNumber].player.id);
 		}
 
 		points[pointNumber].player = player;
@@ -799,33 +782,27 @@ function adjustCheckers(pointNumber) {
 	//Collapse the checkers on the current point if there are more than 5 total
 	if (pointNumber !== null && points[pointNumber].checkers.length > 5) {
 		//Find all non-collapsed checkers on this point
-		$("[onPoint=" + pointNumber + "][collapsed!='true']")
-			.each(function () {
+		document.querySelectorAll("[onPoint=" + pointNumber + "][collapsed!='true']")
+			.forEach(function (checker) {
 				//Calculate the new y coordinate of the checker
-				var curY = parseFloat($(this)
-					.attr('cy'));
+				var curY = parseFloat(checker.getAttribute('cy'));
 				var newY = pointNumber <= 12 ? curY / 2 : ((curY - 570) / 2) + 570;
 
 				//Set the new y coordinate of the checker and it's "collapsed" value to true
-				$(this)
-					.attr('cy', newY);
-				$(this)
-					.attr('collapsed', 'true');
+				checker.setAttribute('cy', newY);
+				checker.setAttribute('collapsed', 'true');
 			});
 	} else if (pointNumber) {
 		//Find all collapsed checkers on this point
-		$("[onPoint=" + pointNumber + "][collapsed='true']")
-			.each(function () {
+		document.querySelectorAll("[onPoint=" + pointNumber + "][collapsed='true']")
+			.forEach(function (checker) {
 				//Calculate the new y coordinate of the checker
-				var curY = parseFloat($(this)
-					.attr('cy'));
+				var curY = parseFloat(checker.getAttribute('cy'));
 				var newY = pointNumber <= 12 ? curY * 2 : ((curY - 570) * 2) + 570;
 
 				//Set the new y coordinate of the checker and it's "collapsed" value to true
-				$(this)
-					.attr('cy', newY);
-				$(this)
-					.attr('collapsed', 'true');
+				checker.setAttribute('cy', newY);
+				checker.setAttribute('collapsed', 'true');
 			});
 	}
 }
@@ -834,15 +811,11 @@ function adjustCheckers(pointNumber) {
 function findTopChecker(pointNumber) {
 	var selectedChecker;
 	//Find all checkers on this point
-	$("[onPoint=" + pointNumber + "]")
-		.each(function () {
+	document.querySelectorAll("[onPoint=" + pointNumber + "]")
+		.forEach(function (checker) {
 			//Update selectedChecker if it is null or the found checker is above the selected checker
-			if (!selectedChecker || (pointNumber > 12 ? parseFloat($(this)
-					.attr('cy')) < parseFloat($(selectedChecker)
-					.attr('cy')) : parseFloat($(this)
-					.attr('cy')) > parseFloat($(selectedChecker)
-					.attr('cy')))) {
-				selectedChecker = this;
+			if (!selectedChecker || (pointNumber > 12 ? parseFloat(checker.getAttribute('cy')) < parseFloat(selectedChecker.getAttribute('cy')) : parseFloat(checker.getAttribute('cy')) > parseFloat(selectedChecker.getAttribute('cy')))) {
+				selectedChecker = checker;
 			}
 		});
 
@@ -880,20 +853,15 @@ function repopulateCheckers(points) {
 function placeCheckers(point) {
 	var res;
 	var i = 0;
-	$(point.checkers)
-		.each(function () {
+	point.checkers.forEach(function (checker) {
 			//Get the new x y coordinates of the checker
 			res = calcCheckerXY(point.id, i);
 
 			//Set the checker x and y coordinates and its new point number
-			$(this)
-				.attr('onPoint', point.id);
-			$(this)
-				.attr('collapsed', false);
-			$(this)
-				.attr('cx', res[0]);
-			$(this)
-				.attr('cy', res[1]);
+			checker.setAttribute('onPoint', point.id);
+			checker.setAttribute('collapsed', false);
+			checker.setAttribute('cx', res[0]);
+			checker.setAttribute('cy', res[1]);
 
 			i++;
 		});
