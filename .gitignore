@@ -1,0 +1,5 @@
+# ignore all node package files
+/service/node_modules
+/service/package-lock.json
+/service/cert.pem
+/service/key.pem

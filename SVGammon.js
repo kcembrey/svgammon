@@ -30,6 +30,17 @@ var firebaseData;
 var localPlayer;
 var diceRolled = false;
 var players;
+// var SVMediatorServer = 'svmediator.recroomrecords.com';
+var SVMediatorServer = 'kc.recroomrecords.com';
+var localVideo;
+var localStream;
+var remoteVideo;
+var peerConnection;
+var uuid;
+var serverConnection;
+var peerConnectionConfig = {'iceServers': [{'url': 'stun:stun.services.mozilla.com'}, {'url': 'stun:stun.l.google.com:19302'}]};
+
+
 
 populateBoard();
 
@@ -395,7 +406,7 @@ function resetPoint(point) {
 
 //Gets the point number value from the point DOM object id
 function pointNumber(point) {
-	return parseFloat(point.id.split("t")[1]);
+	return point ? parseFloat(point.id.split("t")[1]) : false;
 }
 
 //Returns true if parameter is even
@@ -699,8 +710,9 @@ function submitPlayerNames() {
 	if (players[1].name && players[2].name) {
 		modal.style.display = 'none';
 		localPlayer = players[1];
-		firebaseData = firebase.database();
-		get2PlayerGameData(players[1].name, players[2].name);
+    startPeer2Peer(players);
+		// firebaseData = firebase.database();
+		// get2PlayerGameData(players[1].name, players[2].name);
 	} else {
 		notice = document.getElementById('OnlineGameModalNotice');
 		originalColor = notice.style.color;
@@ -711,6 +723,80 @@ function submitPlayerNames() {
 		}, 500);
 	}
 }
+
+const createPeerConnection = (signaling) => {
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:' + SVMediatorServer + ':193000' }],
+    });
+    
+    peerConnection.onnegotiationneeded = async () => {
+      await createAndSendOffer();
+    };
+
+    peerConnection.onicecandidate = (iceEvent) => {
+      if (iceEvent && iceEvent.candidate) {
+        sendMessage(signaling, {
+          message_type: MESSAGE_TYPE.CANDIDATE,
+          content: iceEvent.candidate,
+        });
+      }
+    };
+    
+    return peerConnection;
+  }
+
+  const addMessageHandler = (signaling, peerConnection) => {
+    signaling.onmessage = async (message) => {
+      var messageText = await message.data.text();
+      const data = JSON.parse(messageText);
+
+      if (!data) {
+        return;
+      }
+
+      const { message_type, content } = data;
+      try {
+        if (message_type === MESSAGE_TYPE.CANDIDATE && content) {
+          await peerConnection.addIceCandidate(content);
+        } else if (message_type === MESSAGE_TYPE.SDP) {
+          if (content.type === 'offer') {
+            await peerConnection.setRemoteDescription(content);
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            sendMessage(signaling, {
+              message_type: MESSAGE_TYPE.SDP,
+              content: answer,
+            });
+          } else if (content.type === 'answer') {
+            await peerConnection.setRemoteDescription(content);
+          } else {
+            console.log('Unsupported SDP type.');
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  };
+
+  const sendMessage = (signaling, message) => {
+    if (code) {
+      signaling.send(JSON.stringify({
+        ...message,
+        code,
+      }));
+    }
+  };
+
+  const createAndSendOffer = async (signaling, peerConnection) => {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    sendMessage(signaling, {
+      message_type: MESSAGE_TYPE.SDP,
+      content: offer,
+    });
+  };
 
 //Get unique game id of 2 player game
 function get2PlayerGameData(p1Name, p2Name) {
@@ -823,4 +909,104 @@ function spinBoard(multiplier) {
       }, 10);
     }, 1000);
   }
+}
+
+function startPeer2Peer() {
+  uuid = createUUID();
+
+  
+  localVideo = document.getElementById('localVideo');
+  remoteVideo = document.getElementById('remoteVideo');
+
+  serverConnection = new WebSocket('wss://' + SVMediatorServer + ':8443');
+  serverConnection.onmessage = gotMessageFromServer;
+
+  var constraints = {
+    video: true,
+    audio: true,
+  };
+
+  if(navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
+  } else {
+    alert('Your browser does not support getUserMedia API');
+  }
+}
+
+function start(isCaller) {
+  peerConnection = new RTCPeerConnection(peerConnectionConfig);
+  peerConnection.onicecandidate = gotIceCandidate;
+  peerConnection.ontrack = gotRemoteStream;
+  peerConnection.addStream(localStream);
+
+  if(isCaller) {
+    peerConnection.createOffer().then(createdDescription).catch(errorHandler);
+  }
+}
+
+async function gotMessageFromServer(message) {
+  if(!peerConnection) start(false);
+
+  var messageText = await message.data.text();
+  var signal = JSON.parse(messageText);
+
+  // Ignore messages from ourself
+  if(signal.uuid == uuid) return;
+
+  if(signal.sdp) {
+    peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function() {
+      // Only create answers in response to offers
+      if(signal.sdp.type == 'offer') {
+        peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
+      }
+    }).catch(errorHandler);
+  } else if(signal.ice) {
+    peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
+  }
+}
+
+function gotIceCandidate(event) {
+  if(event.candidate != null) {
+    serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
+  }
+}
+
+function getUserMediaSuccess(stream) {
+  localStream = stream;
+  localVideo.srcObject = stream;
+  
+
+  if(players[1].name === 'KC') {
+    start(true);
+  }
+}
+
+function createdDescription(description) {
+  console.log('got description');
+
+  peerConnection.setLocalDescription(description).then(function() {
+    serverConnection.send(JSON.stringify({'sdp': peerConnection.localDescription, 'uuid': uuid}));
+  }).catch(errorHandler);
+}
+
+function gotRemoteStream(event) {
+  console.log('got remote stream');
+  remoteVideo.srcObject = event.streams[0];
+}
+
+function errorHandler(error) {
+  console.log(error);
+}
+
+function createUUID() {
+  if (self && self.crypto && self.crypto.randomUUID) {
+    return self.crypto.randomUUID();
+  }
+
+  // Fallback taken from http://stackoverflow.com/a/105074/515584
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  }
+
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 }
