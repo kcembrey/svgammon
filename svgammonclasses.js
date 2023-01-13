@@ -1,11 +1,12 @@
 /*jshint esversion: 6 */
 
 class boardPlayer {
-	constructor(id, barPoint, startingPoint) {
+	constructor(id, barPoint, startingPoint, playerNumber) {
 		this.id = id;
 		this.name = id.toString();
 		this._barPoint = barPoint;
 		this._startingPoint = startingPoint;
+		this._playerNumber = playerNumber
 	}
 
 	set id(value) {
@@ -28,8 +29,20 @@ class boardPlayer {
 		return this._barPoint;
 	}
 
+	get playerNumber() {
+		return this._playerNumber;
+	}
+
+	get toJSON() {
+		return {
+			id: this._id,
+			name: this._name,
+			barPoint: this._barPoint
+		};
+	}
+
 	calculatePoint(value) {
-		if (this._id === 1) {
+		if (this._playerNumber === 1) {
 			return this._startingPoint + value;
 		} else {
 			return this._startingPoint - value;
